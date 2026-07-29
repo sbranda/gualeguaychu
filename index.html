@@ -1,0 +1,2177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+<title>Viaje Gualeguaychú</title>
+<meta name="theme-color" content="#123C52">
+<link rel="manifest" href="manifest.json?v=1">
+<link rel="icon" href="icon-192.svg">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root{
+    --verde:#123C52;
+    --verde-claro:#1F5C79;
+    --terracota:#B23A6B;
+    --ocre:#E8B05C;
+    --crema:#F5F1E6;
+    --crema-osc:#E9E1CC;
+    --indigo:#3B2354;
+    --texto:#2A2A28;
+    --gris:#6B6660;
+  }
+  *{box-sizing:border-box;}
+
+  /* ---------- ACCESSIBILITY ---------- */
+  .skip-link{
+    position:absolute;top:-100px;left:8px;z-index:99999;
+    background:var(--verde);color:#fff;padding:10px 16px;border-radius:8px;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:13px;font-weight:700;text-decoration:none;
+    transition:top .15s;
+  }
+  .skip-link:focus{top:8px;}
+
+  a:focus-visible, button:focus-visible, input:focus-visible,
+  [tabindex]:focus-visible, .stop:focus-within{
+    outline:3px solid var(--ocre);
+    outline-offset:2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+  html,body{margin:0;padding:0;}
+  html{height:100%;}
+  body{
+    background:var(--crema);
+    color:var(--texto);
+    font-family:'Iowan Old Style','Georgia',serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:90px;
+    overscroll-behavior-y:none;
+    min-height:100%;
+  }
+  .sans{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    height:54vh;
+    min-height:320px;
+    overflow:hidden;
+    background:var(--verde);
+  }
+  .hero img{
+    width:100%;height:100%;object-fit:cover;
+    opacity:0.55;
+  }
+  .hero-overlay{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(18,60,82,0.15) 0%, rgba(18,60,82,0.55) 70%, var(--crema) 100%);
+    display:flex;flex-direction:column;justify-content:flex-end;
+    padding:24px 20px 28px;
+  }
+  .eyebrow{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    text-transform:uppercase;letter-spacing:0.14em;font-size:11px;
+    color:var(--ocre);font-weight:600;margin-bottom:8px;
+  }
+  .hero h1{
+    color:#fff;font-size:2.1rem;line-height:1.05;margin:0 0 8px;
+    font-weight:700;text-shadow:0 2px 14px rgba(0,0,0,0.35);
+  }
+  .hero p{
+    color:#EFE7D6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:13.5px;margin:0;max-width:32em;line-height:1.5;
+  }
+  #settingsBtn{
+    position:absolute;top:16px;right:16px;z-index:50;
+    height:38px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.4);
+    background:rgba(0,0,0,0.55);font-size:15px;color:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    padding:0 14px;font-weight:700;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    backdrop-filter:blur(4px);
+  }
+
+  /* ---------- SETTINGS MODAL ---------- */
+  .modal-backdrop{
+    display:none;position:fixed;inset:0;z-index:8000;
+    background:rgba(15,25,30,0.55);
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal-card{
+    background:#fff;border-radius:16px;padding:22px 20px;max-width:380px;width:100%;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    box-shadow:0 10px 40px rgba(0,0,0,0.3);
+  }
+  .modal-card h3{margin:0 0 4px;color:var(--verde);font-size:1.2rem;}
+  .modal-sub{font-size:12.5px;color:var(--gris);margin:0 0 18px;line-height:1.4;}
+  .modal-label{display:block;font-size:12.5px;font-weight:700;color:var(--verde);margin:14px 0 8px;}
+  .modal-input{
+    width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--crema-osc);
+    background:var(--crema);color:var(--texto);font-size:14px;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  .weekday-grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:7px;}
+  .weekday-chip{
+    padding:9px 0;border-radius:9px;border:1.5px solid var(--crema-osc);background:var(--crema);
+    color:var(--texto);font-size:12.5px;font-weight:600;cursor:pointer;text-align:center;
+  }
+  .weekday-chip.active{background:var(--verde);border-color:var(--verde);color:#fff;}
+  .day-stepper{
+    display:flex;align-items:center;justify-content:center;gap:18px;
+    background:var(--crema);border-radius:12px;padding:10px;
+  }
+  .stepper-btn{
+    width:38px;height:38px;border-radius:50%;border:none;background:var(--terracota);
+    color:#fff;font-size:20px;font-weight:700;cursor:pointer;line-height:1;
+  }
+  .stepper-btn:disabled{opacity:0.35;cursor:default;}
+  #dayCount{font-size:1.4rem;font-weight:700;color:var(--verde);min-width:28px;text-align:center;}
+  .modal-hint{font-size:11px;color:var(--gris);text-align:center;margin:8px 0 0;}
+  .modal-actions{display:flex;gap:10px;margin-top:20px;}
+  .modal-btn-secondary, .modal-btn-primary{
+    flex:1;padding:11px 0;border-radius:10px;border:none;font-weight:700;font-size:13.5px;cursor:pointer;
+  }
+  .modal-btn-secondary{background:var(--crema);color:var(--gris);}
+  .modal-btn-primary{background:var(--terracota);color:#fff;}
+
+  /* ---------- NAV TABS ---------- */
+  .tabbar{
+    position:sticky;top:0;z-index:5000;
+    background:var(--crema);
+    display:flex;overflow-x:auto;gap:6px;
+    padding:10px 14px;border-bottom:1px solid var(--crema-osc);
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .tabbar::-webkit-scrollbar{display:none;}
+  .tab{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    flex:0 0 auto;
+    padding:7px 14px;border-radius:99px;
+    background:transparent;border:1px solid var(--crema-osc);
+    color:var(--gris);font-size:13px;font-weight:600;
+    cursor:pointer;white-space:nowrap;transition:all .15s;
+  }
+  .tab.active{background:var(--verde);color:#fff;border-color:var(--verde);}
+
+  /* ---------- SECTIONS ---------- */
+  .section{display:none;padding:18px 18px 6px;max-width:680px;margin:0 auto;}
+  .section.active{display:block;animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .day-banner{
+    background:var(--verde);color:#fff;border-radius:14px;
+    padding:16px 18px;margin-bottom:4px;
+    position:relative;overflow:hidden;
+  }
+  .day-banner::after{
+    content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;
+    background:radial-gradient(circle, rgba(232,176,92,0.25), transparent 70%);
+  }
+  .day-banner .num{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ocre);font-weight:700;
+  }
+  .day-banner h2{margin:2px 0 4px;font-size:1.5rem;}
+  .day-banner .base{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:12.5px;color:#D9E5DC;
+  }
+  .narrative{
+    font-style:italic;color:var(--gris);font-size:14.5px;line-height:1.55;
+    margin:14px 2px 18px;
+  }
+
+  /* ---------- STOP CARD ---------- */
+  .stop{
+    background:#fff;border-radius:14px;overflow:hidden;margin-bottom:16px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06);
+    border:1px solid var(--crema-osc);
+  }
+  .stop img{width:100%;height:170px;object-fit:cover;display:block;background:var(--crema-osc);}
+  .stop-body{padding:14px 16px 16px;}
+  .stop-time{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    display:inline-block;background:var(--ocre);color:var(--verde);
+    font-weight:700;font-size:11.5px;padding:3px 9px;border-radius:6px;margin-bottom:8px;
+  }
+
+  .stop-head-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .visited-toggle{
+    display:flex;align-items:center;gap:5px;cursor:pointer;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:11.5px;font-weight:700;color:var(--gris);user-select:none;
+  }
+  .visited-toggle input{width:16px;height:16px;accent-color:var(--verde-claro);}
+  .visited-toggle input:checked ~ span{color:var(--verde-claro);}
+  .stop.is-visited{border-color:var(--verde-claro);background:#FBFBF6;}
+  .stop.is-visited img{filter:saturate(0.55) brightness(0.92);}
+  .stop.is-visited .stop-time{background:var(--verde-claro);color:#fff;}
+  .stop-visited-badge{
+    display:none;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    position:absolute;top:10px;right:10px;background:var(--verde-claro);color:#fff;
+    font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;
+    box-shadow:0 1px 4px rgba(0,0,0,0.25);
+  }
+  .stop.is-visited .stop-visited-badge{display:inline-block;}
+  .stop{position:relative;}
+  .stop h3{margin:0 0 6px;font-size:1.15rem;color:var(--verde);}
+  .stop .desc{font-size:14px;line-height:1.55;color:var(--texto);margin:0 0 10px;}
+
+  .badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;}
+  .badge{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:10.5px;font-weight:600;color:var(--verde-claro);
+    background:var(--crema);border:1px solid var(--crema-osc);
+    padding:3px 8px;border-radius:6px;
+  }
+
+  .pill-toggle{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:12px;font-weight:600;color:var(--terracota);
+    background:none;border:none;padding:0;cursor:pointer;
+    display:flex;align-items:center;gap:5px;margin-top:6px;
+  }
+  .pill-toggle .arrow{transition:transform .2s;}
+  .pill-toggle.open .arrow{transform:rotate(90deg);}
+
+  .extra{
+    display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--crema-osc);
+  }
+  .extra.open{display:block;}
+  .extra .block{margin-bottom:10px;}
+  .extra .block:last-child{margin-bottom:0;}
+  .extra .label{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;
+    color:var(--terracota);margin-bottom:3px;display:flex;align-items:center;gap:5px;
+  }
+  .extra .label.tip{color:var(--verde-claro);}
+  .extra .label.hist{color:var(--indigo);}
+  .extra .label.acc{color:#1F6B8C;}
+  .extra .label.check{color:var(--terracota);}
+  .extra .label.winter{color:#1F6B8C;}
+  .winter-block{
+    background:#EEF5F8;border-radius:8px;padding:8px 10px;
+    border:1px solid #D5E6EC;margin-bottom:10px !important;
+  }
+  .extra .label.schedule{color:var(--verde-claro);}
+  .schedule-block{
+    background:#F0F6EF;border-radius:8px;padding:8px 10px;
+    border:1px solid #DCE9D9;margin-bottom:10px !important;
+  }
+  .schedule-block .schedule-row{font-size:12px;color:var(--texto);line-height:1.6;}
+  .schedule-block .schedule-note{font-size:10.5px;color:var(--gris);font-style:italic;margin-top:6px;}
+  .extra .label.road{color:var(--terracota);}
+  .road-status-block{
+    background:#FBF1E8;border-radius:8px;padding:8px 10px;
+    border:1px solid #F0DCC4;margin-bottom:10px !important;
+  }
+  .road-status-block p{font-size:12px;color:var(--texto);line-height:1.5;margin:0 0 6px;}
+  .road-status-block .road-contacts{font-size:11px;color:var(--gris);line-height:1.6;}
+
+  .stop-checklist{display:flex;flex-direction:column;gap:6px;}
+  .check-item-mini{
+    display:flex;align-items:flex-start;gap:8px;cursor:pointer;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  .check-item-mini input{width:16px;height:16px;margin-top:1px;accent-color:var(--terracota);flex:0 0 auto;}
+  .check-item-mini span{font-size:12.5px;color:var(--gris);line-height:1.4;}
+  .check-item-mini input:checked + span{color:var(--verde);text-decoration:line-through;}
+
+  .stop-progress{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:10.5px;font-weight:700;color:var(--terracota);
+    background:var(--crema);border:1px solid var(--crema-osc);border-radius:6px;
+    padding:3px 8px;display:inline-block;margin-bottom:4px;
+  }
+  .extra p{font-size:13px;line-height:1.5;color:var(--gris);margin:0;}
+
+  /* ---------- TIPS PAGE ---------- */
+  .tip-card{
+    background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;
+    border-left:4px solid var(--ocre);box-shadow:0 1px 3px rgba(0,0,0,0.05);
+  }
+  .tip-card h4{margin:0 0 4px;color:var(--verde);font-size:1rem;}
+  .tip-card p{margin:0;font-size:13.5px;color:var(--gris);line-height:1.5;}
+
+  /* ---------- SUB-TABS (Tips / Historia) ---------- */
+  .subtab-bar{display:flex;gap:8px;margin:4px 0 18px;}
+  .subtab{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    flex:1;padding:9px 0;border-radius:10px;border:1.5px solid var(--crema-osc);
+    background:#fff;color:var(--gris);font-size:13px;font-weight:700;cursor:pointer;
+  }
+  .subtab.active{background:var(--verde);border-color:var(--verde);color:#fff;}
+
+  /* ---------- HISTORIA ---------- */
+  .era-block{
+    background:#fff;border-radius:14px;padding:16px 18px;margin-bottom:14px;
+    border:1px solid var(--crema-osc);box-shadow:0 1px 3px rgba(0,0,0,0.05);
+  }
+  .era-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .era-icon{font-size:22px;flex:0 0 auto;line-height:1.3;}
+  .era-period{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;
+    color:var(--terracota);margin-bottom:2px;
+  }
+  .era-title{margin:0;font-size:1.08rem;color:var(--verde);line-height:1.3;}
+  .era-text p{font-size:14px;line-height:1.62;color:var(--texto);margin:0 0 12px;}
+  .era-text p:last-child{margin-bottom:0;}
+
+  /* ---------- CHECKLIST ---------- */
+  .check-item{
+    display:flex;align-items:center;gap:12px;background:#fff;border-radius:10px;
+    padding:12px 14px;margin-bottom:8px;border:1px solid var(--crema-osc);cursor:pointer;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  .check-item input{width:19px;height:19px;accent-color:var(--terracota);}
+  .check-item span{font-size:14px;}
+  .check-item.done span{color:var(--gris);text-decoration:line-through;}
+
+  /* ---------- CURIOSITY BANNER ---------- */
+  .curio-banner{
+    background:linear-gradient(135deg, var(--indigo), #5a3d7a);
+    color:#fff;border-radius:14px;padding:16px 18px;margin:16px 0;
+    font-size:13.5px;line-height:1.55;
+  }
+  .curio-banner .label{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:10.5px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ocre);
+    font-weight:700;margin-bottom:6px;
+  }
+
+  /* ---------- FOOTER NAV ---------- */
+  .bottomnav{
+    position:fixed;bottom:0;left:0;right:0;z-index:5000;
+    background:#fff;border-top:1px solid var(--crema-osc);
+    display:flex;justify-content:space-around;
+    padding:8px 4px calc(8px + env(safe-area-inset-bottom));
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    transform:translateZ(0);
+    -webkit-transform:translateZ(0);
+  }
+  .nav-btn{
+    background:none;border:none;display:flex;flex-direction:column;align-items:center;
+    gap:3px;color:var(--gris);font-size:10.5px;font-weight:600;cursor:pointer;flex:1;
+  }
+  .nav-btn .ic{font-size:19px;}
+  .nav-btn.active{color:var(--terracota);}
+
+  .install-banner{
+    display:none;
+    background:var(--ocre);color:var(--verde);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:12.5px;font-weight:600;text-align:center;padding:9px 14px;
+  }
+  .install-banner.show{display:block;}
+  .install-banner button{
+    margin-left:10px;background:var(--verde);color:#fff;border:none;border-radius:6px;
+    padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer;
+  }
+
+  .section-title{
+    font-size:1.4rem;color:var(--verde);margin:6px 0 4px;
+  }
+  .section-sub{font-size:13px;color:var(--gris);margin:0 0 16px;font-style:italic;}
+
+  /* ---------- AJUSTES ---------- */
+  .ajustes-group{margin-bottom:20px;}
+  .ajustes-group-title{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;
+    color:var(--gris);margin:0 0 10px;
+  }
+  .ajustes-row{
+    display:flex;align-items:center;justify-content:space-between;
+    background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;
+    border:1px solid var(--crema-osc);
+  }
+  .ajustes-row-label{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:14px;color:var(--texto);
+  }
+  .ajustes-stepper{display:flex;align-items:center;gap:10px;}
+  .ajustes-step-btn{
+    width:34px;height:34px;border-radius:8px;border:none;
+    background:var(--verde);color:#fff;font-size:18px;font-weight:700;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  .ajustes-step-val{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-weight:700;font-size:14px;color:var(--verde);min-width:48px;text-align:center;
+  }
+  .ajustes-toggle-row{
+    display:flex;align-items:center;justify-content:space-between;
+    background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;
+    border:1px solid var(--crema-osc);cursor:pointer;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:14px;color:var(--texto);
+  }
+  .ajustes-toggle-row input[type=checkbox]{
+    width:20px;height:20px;accent-color:var(--terracota);cursor:pointer;
+  }
+  .ajustes-reset-btn{
+    width:100%;padding:13px;border-radius:12px;border:1.5px solid var(--crema-osc);
+    background:#fff;color:var(--gris);font-size:14px;font-weight:700;cursor:pointer;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    margin-top:4px;
+  }
+  .ajustes-reset-desc{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:12.5px;color:var(--gris);line-height:1.5;margin:0 0 10px;
+  }
+  .ajustes-reset-all-btn{
+    width:100%;padding:13px;border-radius:12px;border:1.5px solid #C0392B;
+    background:#fff;color:#C0392B;font-size:14px;font-weight:700;cursor:pointer;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  .ajustes-confirm{
+    background:#FEF0EE;border-radius:12px;padding:14px;margin-top:10px;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:13px;color:var(--texto);border:1px solid #F5C6C0;
+  }
+  .ajustes-confirm-cancel{
+    flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--crema-osc);
+    background:#fff;color:var(--gris);font-size:13px;font-weight:700;cursor:pointer;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  .ajustes-confirm-ok{
+    flex:1;padding:10px;border-radius:10px;border:none;
+    background:#C0392B;color:#fff;font-size:13px;font-weight:700;cursor:pointer;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+
+  /* ---------- CLIMA ---------- */
+  .clima-loading{text-align:center;color:var(--gris);padding:30px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;}
+  .clima-city-title{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;
+    color:var(--gris);margin:18px 0 10px;border-left:3px solid var(--ocre);padding-left:10px;
+  }
+  .clima-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:6px;}
+  .clima-card{
+    background:#fff;border-radius:12px;border:1px solid var(--crema-osc);
+    overflow:hidden;cursor:pointer;
+  }
+  .clima-card-header{
+    display:flex;align-items:center;gap:10px;padding:12px 14px;
+  }
+  .clima-date{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:13px;font-weight:700;color:var(--verde);flex:1;
+  }
+  .clima-date-sub{font-size:11px;font-weight:400;color:var(--gris);}
+  .clima-icon{font-size:28px;flex:0 0 auto;}
+  .clima-temps{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    text-align:right;flex:0 0 auto;
+  }
+  .clima-max{font-size:16px;font-weight:800;color:var(--terracota);}
+  .clima-min{font-size:13px;color:var(--gris);}
+  .clima-detail{
+    display:none;padding:0 14px 12px;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:12.5px;color:var(--gris);
+    border-top:1px solid var(--crema-osc);
+  }
+  .clima-card.open .clima-detail{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-top:10px;}
+  .clima-detail-item{display:flex;flex-direction:column;gap:2px;}
+  .clima-detail-label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.06em;color:var(--gris);}
+  .clima-detail-val{font-size:13px;font-weight:700;color:var(--texto);}
+  .clima-desc{font-size:12px;color:var(--gris);font-style:italic;padding:6px 14px 10px;border-top:1px dashed var(--crema-osc);}
+  .clima-disclaimer{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:11px;color:var(--gris);font-style:italic;
+    background:var(--crema);border-radius:8px;padding:8px 10px;margin-top:12px;line-height:1.5;
+  }
+  .clima-error{
+    background:#FBF1E8;border-radius:10px;padding:14px;text-align:center;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:13px;color:var(--terracota);
+  }
+
+  /* ---------- EXTRAS ---------- */
+  .extras-zone-title{
+    font-size:1rem;color:var(--verde);margin:18px 0 10px;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-weight:800;border-left:3px solid var(--ocre);padding-left:10px;
+  }
+  .extras-card{
+    background:#fff;border-radius:14px;overflow:hidden;margin-bottom:14px;
+    border:1px solid var(--crema-osc);box-shadow:0 1px 3px rgba(0,0,0,0.06);
+  }
+  .extras-card img{width:100%;height:140px;object-fit:cover;display:block;background:var(--crema-osc);}
+  .extras-body{padding:12px 14px 14px;}
+  .extras-header{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+  .extras-icon{font-size:20px;flex:0 0 auto;margin-top:1px;}
+  .extras-name{margin:0;flex:1;font-size:1rem;color:var(--verde);}
+  .extras-desc{font-size:13.5px;line-height:1.5;color:var(--texto);margin:0 0 8px;}
+  .extras-tip{
+    font-size:12.5px;color:var(--verde-claro);line-height:1.4;
+    background:var(--crema);border-radius:8px;padding:8px 10px;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+
+  /* ---------- ACCESSIBILITY MODES ---------- */
+  body.a11y-high-contrast{
+    --verde:#00304A;--verde-claro:#00456B;--terracota:#8B1044;
+    --ocre:#805000;--crema:#FFFFFF;--crema-osc:#CCCCCC;
+    --texto:#000000;--gris:#222222;
+  }
+  body.a11y-dark{
+    --crema:#1C1C1C;--crema-osc:#2A2A2A;--texto:#EDEAE4;--gris:#A0A0A0;
+    background:#1C1C1C !important;
+  }
+  body.a11y-dark .stop, body.a11y-dark .tip-card, body.a11y-dark .check-item,
+  body.a11y-dark .ajustes-row, body.a11y-dark .ajustes-toggle-row,
+  body.a11y-dark .bottomnav, body.a11y-dark .tabbar{
+    background:#242424 !important; border-color:#383838 !important;
+  }
+  body.a11y-dark .day-banner{background:#0F2C3D;}
+  body.a11y-reduce-motion *{
+    animation-duration:0.001ms !important;
+    transition-duration:0.001ms !important;
+  }
+
+  /* ---------- MAPA ---------- */
+  #sec-mapa{padding:0;max-width:none;display:none;flex-direction:column;}
+  #sec-mapa.active{
+    display:flex;
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    height:100vh;height:100dvh;
+    z-index:2000;
+    background:var(--crema);
+    padding-bottom:calc(64px + env(safe-area-inset-bottom));
+  }
+  .map-day-filter{
+    flex:0 0 auto;
+    display:flex;gap:6px;overflow-x:auto;padding:10px 14px;background:var(--crema);
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .map-day-filter::-webkit-scrollbar{display:none;}
+  .map-chip{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    flex:0 0 auto;padding:6px 13px;border-radius:99px;font-size:12.5px;font-weight:600;
+    border:1px solid var(--crema-osc);background:#fff;color:var(--gris);cursor:pointer;
+  }
+  .map-chip.active{background:var(--terracota);color:#fff;border-color:var(--terracota);}
+  #leafletMap{
+    width:100%;
+    flex:1 1 auto;
+    min-height:300px;background:var(--crema-osc);
+    touch-action:pan-x pan-y;
+    overscroll-behavior:contain;
+  }
+  .leaflet-popup-content{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+  .popup-time{color:var(--terracota);font-weight:700;font-size:11px;}
+  .popup-name{color:var(--verde);font-weight:700;font-size:13.5px;margin:2px 0 3px;}
+  .popup-desc{font-size:12px;color:var(--gris);line-height:1.4;margin:0;}
+  .day-marker-icon{
+    background:var(--verde);color:#fff;border-radius:50%;width:28px;height:28px;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;
+    border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.35);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<a href="#sections" class="skip-link">Saltar al contenido principal</a>
+
+<div class="install-banner" id="installBanner">
+  📲 Instalá esta guía en tu pantalla de inicio <button id="installBtn">Instalar</button>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <img id="heroImg" src="https://commons.wikimedia.org/wiki/Special:FilePath/Costanera%20R%C3%ADo%20Gualeguaych%C3%BA.jpg?width=900" alt="Costanera de Gualeguaychú">
+  <button id="settingsBtn" aria-label="Configurar viaje">⚙️ Configurar días</button>
+  <div class="hero-overlay">
+    <div class="eyebrow" id="heroEyebrow">Guía interactiva · 6 días (lun-sáb)</div>
+    <h1>Gualeguaychú</h1>
+    <p>Río, carnaval y casco histórico entrerriano. Costanera, termas, playas del Uruguay y el Delta — con curiosidades, tips y fotos de cada parada.</p>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-backdrop" id="settingsBackdrop">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">Configurar tu viaje</h3>
+    <p class="modal-sub">La app arma el orden de los días sola: llegada → centro y carnaval → termas y playas → Delta → partida.</p>
+
+    <label class="modal-label">Fecha de llegada</label>
+    <input type="date" id="arrivalDateInput" class="modal-input">
+
+    <label class="modal-label">Hora de llegada</label>
+    <input type="time" id="arrivalTimeInput" class="modal-input">
+
+    <label class="modal-label">¿Cuántos días en total?</label>
+    <div class="day-stepper">
+      <button id="dayMinus" class="stepper-btn">−</button>
+      <span id="dayCount">6</span>
+      <button id="dayPlus" class="stepper-btn">+</button>
+    </div>
+    <p class="modal-hint">Rango disponible: 6 a 7 días.</p>
+    <p class="modal-hint" id="departurePreview"></p>
+
+    <div class="modal-actions">
+      <button id="settingsCancel" class="modal-btn-secondary">Cancelar</button>
+      <button id="settingsApply" class="modal-btn-primary">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<div id="sections"></div>
+
+<nav class="bottomnav" aria-label="Secciones de la guía">
+  <button class="nav-btn active" data-target="itinerario" aria-current="page"><span class="ic" aria-hidden="true">🗺️</span>Itinerario</button>
+  <button class="nav-btn" data-target="mapa"><span class="ic" aria-hidden="true">📍</span>Mapa</button>
+  <button class="nav-btn" data-target="clima"><span class="ic" aria-hidden="true">🌤️</span>Clima</button>
+  <button class="nav-btn" data-target="extras"><span class="ic" aria-hidden="true">✨</span>Extras</button>
+  <button class="nav-btn" data-target="tips"><span class="ic" aria-hidden="true">🎒</span>Tips</button>
+  <button class="nav-btn" data-target="checklist"><span class="ic" aria-hidden="true">✅</span>Lista</button>
+  <button class="nav-btn" data-target="ajustes"><span class="ic" aria-hidden="true">⚙️</span>Ajustes</button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<script>
+/* ===================== PERSISTENCIA ===================== */
+const appStorage = {
+  async get(key){
+    try{
+      const raw = localStorage.getItem('gchu-app:' + key);
+      return raw === null ? null : { key, value: raw };
+    }catch(e){ return null; }
+  },
+  async set(key, value){
+    try{
+      localStorage.setItem('gchu-app:' + key, value);
+      return { key, value };
+    }catch(e){ return null; }
+  }
+};
+
+/* ===================== DATA ===================== */
+const IMG = (file) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=900`;
+
+const BLOCKS = [
+  {
+    id:"dia1", num:1, weekday:"Lunes", title:"Llegada y primera tarde junto al río", base:"Gualeguaychú — Centro",
+    narrative:"Llegada el lunes por la tarde en micro desde la Terminal de Liniers. Sin excursiones para este primer día: directo al alojamiento en el centro y, antes de la cena, una vuelta corta al atardecer por la Costanera y el Paseo del Puerto para empezar a agarrarle el pulso a la ciudad.",
+    stops:[
+      {
+        time:"14:30", name:"Llegada en micro — Terminal de Ómnibus",
+        lat:-33.0247, lng:-58.5178,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Gualeguaychú está a unos 208 km de la Terminal de Liniers (Av. General Paz 10868, a 250 m de Av. Rivadavia) por la Ruta Nacional 14, un viaje de unas 4 horas según el micro. Nuevo Expreso tiene boletería propia en Liniers y sale con buena frecuencia hacia Gualeguaychú (y también hacia Paranacito, útil para el día del Delta); Rápido Tata es otra opción habitual desde la misma terminal, con unas 11 frecuencias diarias aproximadamente entre ambas.",
+        history:"La Ruta 14 sigue en gran parte el histórico corredor que unía Buenos Aires con la Mesopotamia argentina. Antes de la ruta pavimentada, la conexión de Gualeguaychú con el resto del país dependía del puerto sobre el río: en 1890 llegó el ramal del Ferrocarril Central Entrerriano, que conectaba la ciudad con su estación y con el muelle del puerto.",
+        curiosity:"La terminal de ómnibus actual ocupa un rol parecido al que tuvo la vieja estación de trenes hace más de un siglo: sigue siendo la puerta de entrada terrestre a una ciudad que históricamente creció mirando al río antes que al camino.",
+        tip:"Comprá el pasaje con unos días de anticipación, sobre todo si viajás en temporada de Carnaval (enero-febrero) o fin de semana largo, porque los horarios más cómodos se agotan rápido. La Terminal de Liniers tiene buen acceso desde la Autopista Perito Moreno y desde General Paz. La llegada a la Terminal de Gualeguaychú (Landa 688) queda a unos 15-20 minutos a pie o en remís corto del centro.",
+        duration:"~4 h de viaje desde Liniers", price:"Pasaje de micro (consultar según empresa y categoría)", access:"Terminal con boleterías de varias empresas, cartelería clara. Wi-Fi y señal de celular sin problemas en toda la ruta.",
+        checklist:["Comprar pasaje con anticipación", "Cargar el celular para la reserva del alojamiento", "Efectivo chico para el remís del centro", "Confirmar dirección del alojamiento"]
+      },
+      {
+        time:"15:30", name:"Check-in en el centro",
+        lat:-33.0092, lng:-58.5165,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"El casco histórico conserva el trazado en damero (cuadrícula) que Tomás de Rocamora diseñó al fundar la Villa en 1783 — fácil de recorrer a pie, con la Plaza San Martín como referencia central para ubicarse.",
+        history:"Rocamora trasladó el asentamiento original —bajo y anegadizo— a la cuchilla donde hoy está el centro, frente a la isla que hoy se llama Isla Libertad. El plano en damero, típico de las fundaciones españolas de la época, se mantiene prácticamente intacto más de dos siglos después.",
+        curiosity:"Gualeguaychú fue una de las tres villas que Rocamora fundó en 1783 por orden del Virrey Vértiz, junto con Concepción del Uruguay y Gualeguay — las tres, muy cerca una de la otra, pensadas para controlar militarmente la región.",
+        tip:"Elegir alojamiento cerca de la Plaza San Martín o de la Costanera conviene: casi todo el itinerario de estos días se hace caminando o en bici.",
+        duration:"—", price:"Según alojamiento", access:"Centro caminable, veredas en buen estado sobre las calles principales.",
+        checklist:["Confirmar horario de check-in", "Reserva impresa o en el celular", "Preguntar por alquiler de bicicletas en el alojamiento"]
+      },
+      {
+        time:"17:30", name:"Primer paseo: Costanera y Paseo del Puerto",
+        lat:-33.0057, lng:-58.5100,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Circuito peatonal renovado junto al río, con bares, heladerías y una vista directa a la Isla Libertad — un islote frente al puerto con una construcción en forma de castillo que es la postal más fotografiada de la ciudad.",
+        history:"Durante el siglo XIX el puerto de Gualeguaychú llegó a ser uno de los más importantes de cabotaje del país, con un muelle de 200 metros de largo. Los galpones que hoy se usan para ferias y eventos culturales se construyeron en 1936-1937, cuando el puerto todavía tenía movimiento comercial activo.",
+        curiosity:"El llamado \"castillo\" de la Isla Libertad lo construyó en 1920 la profesora María Eloísa D'Elía. En 1935 apareció muerta en la casa una empleada doméstica de 25 años, Blanca Sosa, y desde entonces corre la leyenda de que su fantasma todavía deambula por la isla en las noches de luna.",
+        tip:"Es un buen primer paseo justo para el atardecer: la luz baja sobre el río y la isla se ve espectacular desde el tramo recién repavimentado entre Urquiza y 25 de Mayo, con rampas accesibles y luminarias LED.",
+        winterTip:"En invierno el sol se pone temprano (alrededor de las 18-18:30 h) y refresca rápido apenas cae la noche sobre el río — llevá algo de abrigo para esta primera vuelta.",
+        duration:"1-1h30", price:"Gratis", access:"Peatonal con rampas accesibles y buena iluminación nocturna.",
+        checklist:["Cámara para el atardecer y la Isla Libertad", "Abrigo liviano para la brisa del río"]
+      },
+      {
+        time:"21:00", name:"Cena: Con el Cuchillo entre los Dientes",
+        lat:-33.0052, lng:-58.5088,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Restaurante frente a la Costanera, conocido especialmente por el pescado de río: surubí con salsa roquefort y boga son dos de los platos más recomendados por los propios comensales.",
+        curiosity:"El pescado de río —surubí, boga, dorado, pacú— es uno de los grandes protagonistas de la mesa entrerriana, gracias a la pesca en el río Gualeguaychú y en el Uruguay, que corren a pocas cuadras de cualquier restaurante del centro.",
+        tip:"Buen primer plato para \"aterrizar\" después del viaje: mesa con vista al río y carta con platos de pescado bien resueltos. Los restaurantes del interior suelen abrir recién a las 20-21 h para la cena.",
+        duration:"1h30-2h", price:"$$ (medio)", access:"Terraza con vista al río y salón interior; carta en papel.",
+        checklist:["Reservar si es fin de semana o temporada alta", "Animarse a probar el pescado de río"]
+      }
+    ]
+  },
+  {
+    id:"dia2", num:2, weekday:"Martes", title:"Casco histórico, museos y teatro", base:"Gualeguaychú — Centro",
+    narrative:"Día dedicado a la ciudad colonial y a sus casas-museo: la Plaza fundacional, la casa más antigua de Entre Ríos, la leyenda de la Azotea de Lapalma y el Teatro Gualeguaychú, con más de un siglo de historia.",
+    stops:[
+      {
+        time:"09:30", name:"Plaza San Martín, Catedral y Museo Casa de Haedo",
+        lat:-33.0090, lng:-58.5160,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"La plaza fundacional de la ciudad, frente a la Catedral San José, concentra varios de los edificios más antiguos: la Casa de Haedo, considerada la construcción de material más antigua de Entre Ríos, es hoy el Museo de la Ciudad.",
+        history:"El solar de la Casa de Haedo fue uno de los que repartió Rocamora en 1783 al fundar la Villa. La casa se construyó a comienzos del siglo XIX y conserva en gran medida su estructura original, de estilo colonial primitivo: paredes anchas, ángulos rectos y ventanas hundidas con rejas de hierro. La Iglesia (hoy Catedral San José) se terminó en 1836, tras empezarse a construir por 1807.",
+        curiosity:"La familia Haedo (también escrita Aedo o Ahedo) fue una de las primeras en asentarse en Gualeguaychú, con larga trayectoria política y comercial — y le dio nombre a la casa que hoy funciona como museo de la ciudad.",
+        tip:"El Museo Casa de Haedo abre de miércoles a domingos de 9 a 12 h y de miércoles a sábados de 15:30 a 18:30 h — si vas un martes, se puede ver la fachada y la plaza igual, y volver otro día para entrar.",
+        duration:"45 min - 1 h", price:"Gratis / entrada económica según museo", access:"Paneles con texto en las salas; plaza y catedral de acceso libre y caminable.",
+        checklist:["Confirmar día y horario de apertura del museo antes de ir", "Cámara para la plaza y la fachada colonial"]
+      },
+      {
+        time:"11:30", name:"Azotea de Lapalma",
+        lat:-33.0110, lng:-58.5145,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Casona de arquitectura italianizante, de las que llegaron con la inmigración europea, hoy convertida en museo. Objetos de época, documentos del Concejo Deliberante desde 1870 y una leyenda urbana muy conocida en la ciudad.",
+        history:"La Azotea de Lapalma es uno de los tres conjuntos de \"casas museo\" de Gualeguaychú (junto con la Casa de Haedo y la Casa Natal de Fray Mocho), dependientes de la Dirección de Cultura municipal. Representa la arquitectura post-colonial, con rasgos italianizantes que hablan de la llegada de inmigrantes a fines del siglo XIX.",
+        curiosity:"La leyenda dice que en la azotea de la casona suele divisarse la silueta de Isabel Frutos, \"la mujer que murió de amor\" — una historia que se sigue contando en el evento anual \"El museo no duerme\", con relatos y teatro dentro de la propia casona.",
+        tip:"Antes de ir, confirmá el horario: al ser un museo municipal chico, a veces cierra por eventos puntuales o hace horario reducido fuera de temporada alta.",
+        duration:"45 min - 1 h", price:"Gratis / entrada económica", access:"Recorrido guiado o autoguiado según disponibilidad de personal; paneles con información histórica.",
+        checklist:["Confirmar horario de apertura", "Preguntar por la leyenda de Isabel Frutos"]
+      },
+      {
+        time:"16:00", name:"Teatro Gualeguaychú",
+        lat:-33.0095, lng:-58.5185,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Con más de un siglo de historia, es uno de los edificios emblemáticos del centro. Se inauguró con la ópera \"Aída\" de Verdi y todavía funciona como sala de espectáculos de la ciudad.",
+        history:"Entre 2009 y 2011 el teatro pasó por una restauración durante la cual aparecieron objetos que habían pertenecido al público de otra época —golosinas, cajas de fósforos, abanicos, monedas, programas de mano— hoy parte de su patrimonio, resguardado primero en el Museo Casa de Haedo y luego devuelto al propio teatro.",
+        curiosity:"Cada Jueves Santo el Teatro suele abrir sus puertas para visitas guiadas gratuitas, una buena oportunidad para ver la sala por dentro sin necesidad de coincidir con una función.",
+        tip:"Consultá la cartelera antes de ir: si hay función esa noche, puede valer la pena volver más tarde en vez de solo mirar la fachada.",
+        duration:"30-45 min (visita) o según espectáculo", price:"Visita libre / entrada según espectáculo", access:"Fachada e ingreso accesibles desde la vereda; sala con buena visibilidad.",
+        checklist:["Consultar cartelera de espectáculos", "Preguntar por visitas guiadas del edificio"]
+      },
+      {
+        time:"20:30", name:"Cena: Terraza Café",
+        lat:-33.0060, lng:-58.5095,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Café-restaurante sobre la Costanera, con mesas adentro y afuera y una de las vistas al río más comentadas de la ciudad. Buena opción para una milanesa abundante después de un día de museos.",
+        tip:"Conviene pedir mesa afuera si el clima acompaña — es de los lugares con mejor vista de la Costanera para la puesta de sol.",
+        duration:"1h-1h30", price:"$$ (medio)", access:"Terraza al aire libre y salón interior; carta en papel.",
+        checklist:["Pedir mesa en la terraza si el clima ayuda"]
+      }
+    ]
+  },
+  {
+    id:"dia3", num:3, weekday:"Miércoles", title:"Parque Unzué y Carnaval", base:"Gualeguaychú — Centro",
+    narrative:"Día de aire libre y de la fiesta que hizo famosa a la ciudad: el pulmón verde de 120 hectáreas frente al río, y el Corsódromo donde cada verano desfila el Carnaval del País.",
+    stops:[
+      {
+        time:"09:30", name:"Parque Unzué — Laguna de los Patos",
+        lat:-33.0195, lng:-58.5230,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Parque de más de 120 hectáreas en la margen izquierda del río, con senderos, eucaliptos centenarios, una laguna con patos, nutrias y ñandúes, y una reserva florística con monte nativo. Se accede cruzando el puente Méndez Casariego.",
+        history:"El terreno lo donó en 1920 el filántropo Saturnino Unzué a la Municipalidad, \"para solaz y esparcimiento de gualeguaychuenses\" — con la condición de que en diez años se construyeran allí las obras necesarias, o la donación quedaría sin efecto. El intendente Bernardo Peyret encaró las obras casi sobre el final del plazo, y en 1930 se levantó el puente de hierro que conecta el parque con la ciudad.",
+        curiosity:"El parque está dividido por la ruta provincial 42 en \"Unzué Chico\" (con clubes, canchas y zonas de recreación) y \"Unzué Grande\" (más silvestre, con la Reserva Natural Parque Florístico y el Centro de Interpretación La Delfina).",
+        tip:"Se puede recorrer a pie o en bici (muchos alojamientos las alquilan); hay mesas hechas con durmientes de las vías del tren para parar a tomar mate junto al río.",
+        duration:"1h30-2h", price:"Gratis", access:"Senderos de tierra y asfalto, mayormente llanos; buena señalización en los circuitos principales.",
+        checklist:["Alquilar bicicleta si el alojamiento lo ofrece", "Repelente de mosquitos (zona de humedales)", "Agua y protector solar"]
+      },
+      {
+        time:"13:00", name:"Almuerzo en el Parque Unzué",
+        lat:-33.0185, lng:-58.5215,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"En la zona de clubes del Unzué Chico (Náutico, Carpinchos, Central Entrerriano) hay opciones de comida al paso y parrilla con vista al río — buen lugar para hacer una pausa larga a mitad del recorrido.",
+        tip:"Si el día está lindo, llevar algo para un pícnic también es una opción: el parque tiene mesas y zonas de sombra en abundancia.",
+        duration:"1h-1h30", price:"Variable", access:"Zona de clubes con parrillas y mesas al aire libre.",
+        checklist:["Reservar si se busca un lugar puntual de comida", "Llevar mantel/pícnic como alternativa"]
+      },
+      {
+        time:"17:00", name:"Corsódromo \"José Luis Gestro\" y Museo del Carnaval",
+        lat:-33.0035, lng:-58.5060,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"El escenario del Carnaval del País: una pasarela de 500 metros por la que desfilan las comparsas cada sábado de enero y febrero. El Museo del Carnaval, en uno de los extremos, cuenta la historia del evento con vestuarios, fotos y objetos de las comparsas.",
+        history:"Los corsos gualeguaychuenses existen desde fines del siglo XIX, aunque en 1876 un decreto del gobernador Justo José de Urquiza había prohibido \"para siempre\" las mascaradas. Recién en 1978 un grupo de instituciones locales reorganizó el festejo bajo un formato competitivo entre comparsas, y en 1997 se inauguró el Corsódromo, hoy con capacidad para unas 30.000-40.000 personas por noche.",
+        curiosity:"Las cinco comparsas actuales (Papelitos, O'Bahía, Ará Yeví, Kamarr y Marí Marí) representan a distintos clubes sociales de la ciudad y trabajan casi todo el año en talleres de costura, herrería y diseño — cada comparsa puede invertir cientos de miles de dólares en trajes, plumas y carrozas para una sola temporada.",
+        tip:"Si el viaje no coincide con enero-febrero, el Corsódromo igual se puede recorrer por fuera y el Museo del Carnaval se visita todo el año — es la mejor forma de entender la escala del evento sin esperar a la temporada.",
+        winterTip:"Fuera de la temporada de Carnaval, el predio está tranquilo y se puede caminar la pasarela completa sin gente; llevá abrigo si vas a la tardecita, refresca rápido apenas se pone el sol.",
+        duration:"1h-1h30", price:"Corsódromo: entrada solo con espectáculo (ene-feb) · Museo: entrada económica", access:"Museo con paneles y vitrinas descriptivas; predio del Corsódromo accesible y caminable fuera de las noches de desfile.",
+        checklist:["Confirmar si el Museo del Carnaval abre ese día", "Consultar fechas de corsos si el viaje cae en enero-febrero"]
+      },
+      {
+        time:"21:00", name:"Cena y paseo nocturno por la Costanera",
+        lat:-33.0057, lng:-58.5100,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Cierre de un día largo con una cena tranquila y una vuelta nocturna por la Costanera, con la Isla Libertad iluminada de fondo.",
+        tip:"Los locales de pubs y confiterías bailables de la zona portuaria suelen tener más movimiento los fines de semana; entre semana es una linda opción para una caminata tranquila después de cenar.",
+        duration:"Libre", price:"Variable", access:"Peatonal iluminado junto al río.",
+        checklist:["Abrigo liviano para la noche"]
+      }
+    ]
+  },
+  {
+    id:"dia4", num:4, weekday:"Jueves", title:"Termas y playas del río Uruguay", base:"Gualeguaychú — Termas y Ñandubaysal",
+    narrative:"Día de relax: la mañana en las aguas termales saladas del Guaychú y la tarde en las playas de arena del Balneario Ñandubaysal, sobre el río Uruguay.",
+    stops:[
+      {
+        time:"09:30", name:"Termas del Guaychú",
+        lat:-32.9520, lng:-58.4720,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Complejo termal a unos 8 km del centro por la Ruta 14, con piletas de agua termal salada entre 32° y 41°, cubiertas y descubiertas, además de un sector de parque acuático habilitado en temporada alta.",
+        history:"El agua termal proviene de un pozo de casi 1.000 metros de profundidad, con una temperatura natural de unos 36°C y buen caudal de surgencia. Es un desarrollo relativamente reciente dentro del abanico turístico de la región, pensado como alternativa de descanso frente al río y al Carnaval.",
+        curiosity:"El agua es clorurada, con sodio, potasio y magnesio — su salinidad le da, según cuentan en el propio complejo, un ligero poder cicatrizante además del efecto relajante típico de las aguas termales.",
+        tip:"Las piletas suelen abrir de 10 a 20 h. Alquilan reposeras, toallones y lockers si no llevás los propios — conviene ir temprano entre semana para tener el lugar más tranquilo.",
+        duration:"2h-3h", price:"Entrada paga (consultar valor actualizado; residentes locales suelen tener descuento)", access:"Piletas cubiertas y descubiertas, vestuarios y sanitarios internos; solárium con reposeras.",
+        checklist:["Traje de baño y toalla", "Ojotas o calzado de goma", "Confirmar horario de apertura de piletas"]
+      },
+      {
+        time:"13:00", name:"Almuerzo cerca de las Termas",
+        lat:-32.9500, lng:-58.4700,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"El complejo cuenta con gastronomía propia y kiosco; también hay puestos regionales sobre la ruta, camino a Pueblo Belgrano.",
+        tip:"Buen momento para probar algún producto regional (dulces, conservas) camino a la playa, ya que este tramo de ruta conecta directo con el acceso a Ñandubaysal.",
+        duration:"1h", price:"Variable", access:"Gastronomía dentro del complejo termal y puestos sobre la ruta.",
+        checklist:["Efectivo para puestos regionales"]
+      },
+      {
+        time:"15:30", name:"Balneario Ñandubaysal",
+        lat:-32.9430, lng:-58.3900,
+        img:IMG("Ñandubaysal - panoramio.jpg"),
+        desc:"Complejo privado de playas de arena sobre el río Uruguay, a unos 13 km del centro. Camping, paradores, restaurante, alquiler de kayaks y una franja de costa mucho más amplia que las playas del río Gualeguaychú en el centro.",
+        history:"El nombre combina \"ñandubay\" (un árbol nativo de madera muy dura, típico del monte entrerriano) con \"sal\", en referencia a la playa. Es uno de los balnearios más elegidos de la región desde hace décadas, especialmente en los meses de verano.",
+        curiosity:"A diferencia de las playas del río Gualeguaychú —más chicas y urbanas—, Ñandubaysal da directo al río Uruguay, mucho más ancho, lo que le da una sensación casi de mar en varios tramos de la costa.",
+        tip:"Se llega en remís o combi (no hay demasiada frecuencia de transporte público regular, conviene coordinar el regreso con el mismo remís). Llevar protector solar: no siempre hay sombra natural en toda la costa.",
+        winterTip:"Fuera de la temporada de verano el complejo está mucho más tranquilo (y algunos servicios pueden reducir horario) — igual vale la pena por el paisaje de playa y monte, aunque no haga tiempo para meterse al agua.",
+        duration:"2h-3h", price:"Entrada paga (consultar valor actualizado; residentes de Gualeguaychú suelen tener descuento)", access:"Playas de arena con accesos señalizados; alquiler de kayaks y reposeras en temporada.",
+        checklist:["Coordinar remís de ida y vuelta", "Traje de baño, toalla y protector solar", "Efectivo para entrada y alquileres"]
+      },
+      {
+        time:"20:30", name:"Cena de vuelta en el centro",
+        lat:-33.0080, lng:-58.5170,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Regreso al centro para cenar algo simple después de un día de agua y sol — pizza o pastas son buena opción para no complicarse.",
+        tip:"Hay varias pizzerías clásicas sobre las calles del centro; buena opción liviana después de un día de playa y termas.",
+        duration:"1h-1h30", price:"$$ (medio)", access:"Centro caminable, varias opciones a pocas cuadras entre sí.",
+        checklist:["Ducharse y cambiarse antes de salir a cenar"]
+      }
+    ]
+  },
+  {
+    id:"dia5", num:5, weekday:"Viernes", title:"Excursión de día completo al Delta: Villa Paranacito", base:"Gualeguaychú — excursión al Delta",
+    narrative:"Sin auto propio, la forma más práctica de conocer el Delta entrerriano es coordinar un remís o combi de día completo hasta Villa Paranacito, a unos 100 km al sur, y desde ahí sumar un paseo en lancha por los arroyos.",
+    stops:[
+      {
+        time:"08:00", name:"Salida hacia Villa Paranacito",
+        lat:-33.0247, lng:-58.5178,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Villa Paranacito está a unos 102 km de Gualeguaychú por la Ruta Nacional 12, cabecera del departamento Islas del Ibicuy, en pleno Delta del Paraná. El tramo final incluye algunos kilómetros de camino de tierra en buen estado.",
+        history:"Fundada oficialmente el 25 de mayo de 1906, Villa Paranacito fue poblada mayoritariamente por inmigrantes de Europa central y oriental que llegaron a trabajar la madera del delta. Durante décadas la comunicación con el resto de la provincia fue únicamente por lancha, hacia Campana y San Fernando en Buenos Aires, y ocasionalmente por barco a vapor hasta Gualeguaychú.",
+        curiosity:"El pueblo recién se conectó por caminos de tierra en 1937 y tuvo electricidad recién en 1971 — hoy sigue siendo un lugar donde buena parte de los habitantes vive dispersa en islas, y el radioaficionado todavía se usa como forma de comunicación.",
+        tip:"Coordiná el remís de ida y vuelta el día anterior (o consultá si hay combi de línea disponible ese día) — al no ser una excursión con salida fija como en otros destinos, conviene cerrar el traslado con anticipación.",
+        duration:"~1h30 de viaje por tramo", price:"Remís o combi (consultar tarifa)", access:"Ruta Nacional 12 pavimentada, con un tramo final de camino de tierra en buen estado.",
+        checklist:["Coordinar remís o combi con anticipación", "Documento (DNI)", "Repelente de mosquitos"]
+      },
+      {
+        time:"10:00", name:"Paseo en lancha por los arroyos del Delta",
+        lat:-33.700, lng:-58.683,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Recorrido embarcado por los canales del Delta entrerriano, con avistaje de aves acuáticas, bosques en galería y viviendas típicas de isleños. El circuito del arroyo Sagastume Chico, con sus plantaciones de taxodios sobre la ribera, es uno de los más pintorescos.",
+        curiosity:"Villa Paranacito está en la tercera sección del Delta del Paraná, en el corazón de las Islas del Ibicuy — la floración del irupé (un lirio de agua gigante) se puede ver entre febrero y marzo, si el viaje coincide con esa época.",
+        tip:"Los paseos en lancha se contratan en el mismo pueblo con guías locales; también se puede caminar o alquilar bicicletas para conocer las islas más cercanas por tierra.",
+        duration:"1h30-2h", price:"Excursión náutica (consultar valor en el pueblo)", access:"Embarque asistido por guías locales; chalecos salvavidas incluidos en la excursión.",
+        checklist:["Protector solar y gorro", "Repelente de mosquitos", "Cámara para las aves y el paisaje isleño"]
+      },
+      {
+        time:"13:00", name:"Almuerzo isleño en Villa Paranacito",
+        lat:-33.700, lng:-58.683,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Pescado de río recién sacado del agua es la especialidad casi obligada en el pueblo — pejerrey, dorado, surubí o boga, según la temporada de pesca.",
+        tip:"Es un pueblo chico, con pocas opciones gastronómicas pero de buena calidad y precio — preguntar en el lugar dónde comen los propios guías de pesca suele ser una buena referencia.",
+        duration:"1h-1h30", price:"$$ (medio)", access:"Locales pequeños, atención directa y sencilla.",
+        checklist:["Efectivo (no todos los locales del pueblo tienen posnet)"]
+      },
+      {
+        time:"18:00", name:"Regreso a Gualeguaychú",
+        lat:-33.0247, lng:-58.5178,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Vuelta por la misma Ruta 12, con tiempo de sobra para descansar antes del último día completo en la ciudad.",
+        tip:"Si el remís lo permite, pedir parar en Ceibas (a mitad de camino) para conocer la Estancia La Azotea, casco de campo de 1868 con un aljibe original en el patio — buena parada corta para estirar las piernas.",
+        duration:"~1h30 de viaje", price:"Incluido en el traslado contratado", access:"Ruta pavimentada; sin paradas obligatorias en el regreso.",
+        checklist:["Revisar que no quede nada en la lancha o el remís"]
+      }
+    ]
+  },
+  {
+    id:"dia6", num:6, weekday:"Sábado", title:"Última mañana: Puerto y partida", base:"Gualeguaychú — partida",
+    narrative:"Último tramo del viaje: una vuelta final por el Paseo del Puerto, compras de despedida y traslado a la Terminal para el micro de la mañana de regreso a Liniers.",
+    stops:[
+      {
+        time:"08:30", name:"Última vuelta por el Paseo del Puerto",
+        lat:-33.0057, lng:-58.5100,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Desayuno con vista al río y una caminata tranquila por el Paseo del Puerto, con la Isla Libertad de fondo, antes de las compras finales.",
+        tip:"La luz de la mañana sobre el río es distinta a la del atardecer del primer día — vale la pena una foto final desde el mismo lugar donde arrancó el viaje.",
+        duration:"1h", price:"Gratis", access:"Peatonal accesible junto al río.",
+        checklist:["Cámara para la foto final de despedida"]
+      },
+      {
+        time:"10:00", name:"Compras de despedida",
+        lat:-33.0090, lng:-58.5165,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Última vuelta por el centro para llevarse productos regionales: dulces, conservas y artesanías, además de algún recuerdo del Carnaval si se pasó por el Museo.",
+        tip:"Los locales de productos regionales suelen estar concentrados cerca de la Plaza San Martín y de la zona del Paseo del Puerto — llevar efectivo, no todos aceptan tarjeta.",
+        duration:"1h-1h30", price:"Variable", access:"Centro caminable, comercios sobre las calles principales.",
+        checklist:["Efectivo para las últimas compras", "Bolsa extra para lo comprado", "Revisar que no falte nada en las valijas"]
+      },
+      {
+        time:"11:30", name:"Traslado a la Terminal y salida en micro",
+        lat:-33.0247, lng:-58.5178,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Vuelta a la Terminal de Liniers por la Ruta 14, mismo trayecto de ida (~4 h), con salidas frecuentes durante toda la mañana y el mediodía (Nuevo Expreso y Rápido Tata, entre otras).",
+        tip:"Confirmá el horario exacto de tu micro el día anterior y calculá el traslado a la Terminal con margen — un sábado a media mañana el tránsito en el centro suele ser tranquilo, pero mejor no ajustar al límite.",
+        duration:"~4 h de viaje", price:"Pasaje de micro (consultar según empresa y categoría)", access:"Terminal con boleterías de varias empresas.",
+        checklist:["Confirmar horario exacto de salida del micro", "Calcular tiempo de traslado a la Terminal", "Revisar que no falte nada en el alojamiento"]
+      }
+    ]
+  },
+  {
+    id:"diaExtra", title:"Día extra: Museo Ferroviario, Instituto Magnasco y Puente Internacional", base:"Gualeguaychú — día extra",
+    narrative:"Día adicional para quienes tienen más tiempo: la vieja estación de trenes convertida en museo, una biblioteca histórica con piezas de colección y el puente que cruza a Uruguay, con su propia historia reciente.",
+    stops:[
+      {
+        time:"10:00", name:"Museo Ferroviario",
+        lat:-33.0045, lng:-58.5070,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Funciona en la antigua estación de trenes de Gualeguaychú, con locomotoras a vapor, vagones y objetos que cuentan la historia del ferrocarril en la ciudad, inaugurado en 1890.",
+        history:"El ramal del Ferrocarril Central Entrerriano llegó a Gualeguaychú en 1890, conectando la ciudad con su estación y con el puerto sobre el río a través de un tranvía. Con el correr de las décadas el ferrocarril de pasajeros dejó de operar, y la vieja estación fue reconvertida en parte del predio cultural que hoy comparte espacio con el Corsódromo.",
+        curiosity:"El predio de la ex estación —hoy \"Parque de la Estación\"— combina en un mismo lugar el Museo Ferroviario, el Museo del Carnaval y el Corsódromo, uniendo tres capítulos distintos de la historia de la ciudad en un solo paseo.",
+        tip:"Entrada libre y gratuita, con guías que suelen compartir anécdotas sobre cómo funcionaba la estación — conviene ir a media mañana, cuando hay más movimiento de personal.",
+        duration:"45 min - 1 h", price:"Gratis", access:"Vagones y andenes accesibles a pie; guías disponibles según horario.",
+        checklist:["Confirmar horario de apertura"]
+      },
+      {
+        time:"12:00", name:"Instituto Magnasco y Casa de Andrade",
+        lat:-33.0100, lng:-58.5175,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"El Instituto Magnasco resguarda una biblioteca histórica con piezas notables, entre ellas un incunable de 1489 y un ejemplar del primer libro de astronomía escrito en el país (1748). La Casa de Andrade es uno de los edificios característicos del centro.",
+        history:"El instituto lleva el nombre de Osvaldo Magnasco (1864-1920), jurista y político nacido en la ciudad, una de las figuras ilustres de Gualeguaychú junto con el escritor Fray Mocho y el explorador antártico José María Sobral.",
+        curiosity:"Entre el patrimonio del instituto hay manuscritos, pergaminos y ediciones agotadas que rara vez se exhiben todas juntas — vale la pena preguntar si hay alguna muestra puntual abierta ese día.",
+        tip:"Conviene confirmar horarios por ser una institución con atención más acotada que los museos municipales.",
+        duration:"30-45 min", price:"Gratis / consultar", access:"Visita guiada según disponibilidad de personal.",
+        checklist:["Confirmar horario de atención antes de ir"]
+      },
+      {
+        time:"16:00", name:"Puente Internacional Gral. San Martín",
+        lat:-33.0700, lng:-58.2850,
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"El paso fronterizo que une Gualeguaychú con Fray Bentos (Uruguay), a unos 28-30 km del centro por la ruta 136. Punto de vista sobre el río Uruguay y escenario de uno de los conflictos ambientales más importantes de la región en la última década.",
+        history:"Entre 2005 y 2010 la instalación de una planta de celulosa (Botnia, luego UPM) en la costa uruguaya frente a Gualeguaychú generó un conflicto binacional de gran escala: la Asamblea Ciudadana Ambiental de Gualeguaychú organizó cortes del puente que llegaron a extenderse por años, con una masiva marcha inicial el 30 de abril de 2005 a la que asistieron unas 40.000 personas. El conflicto llegó a la Corte Internacional de Justicia de La Haya, que en 2010 falló que Uruguay había violado el tratado del río compartido, aunque no hizo lugar al reclamo por contaminación por falta de pruebas.",
+        curiosity:"Durante los años de corte, los asambleístas siguieron la lectura del fallo de La Haya en una pantalla gigante instalada en el paraje Arroyo Verde, a pocos kilómetros del puente, en una vigilia de toda una noche con el Himno Nacional de fondo.",
+        tip:"Si se cruza a Uruguay (Fray Bentos), llevar DNI o pasaporte vigente — es un cruce fronterizo internacional, con control migratorio en ambos lados.",
+        duration:"1h (mirador) o medio día si se cruza a Fray Bentos", price:"Gratis (mirador) / trámite migratorio si se cruza", access:"Zona de ruta, sin veredas peatonales largas; se recomienda ir en auto, remís o combi.",
+        checklist:["DNI o pasaporte si se piensa cruzar a Uruguay", "Confirmar si se necesita algún trámite migratorio vigente"]
+      }
+    ]
+  }
+];
+
+/* ===================== SCHEDULE ASSEMBLY (dynamic days, real dates) ===================== */
+function parseDateInput(str){
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function addDays(date, n){
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+function formatWeekday(date){
+  const s = date.toLocaleDateString('es-AR', { weekday: 'long' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function formatWeekdayShort(date){
+  const s = date.toLocaleDateString('es-AR', { weekday: 'short' });
+  return s.charAt(0).toUpperCase() + s.slice(1).replace('.', '');
+}
+function formatDateShort(date){
+  return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }).replace('.', '');
+}
+function todayISO(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Fixed logical order: llegada+centro → carnaval → termas+playas → Delta → partida
+const CORE_ORDER = ["dia1","dia2","dia3","dia4","dia5","dia6"];
+// Optional blocks added in this priority order as more days become available,
+// each inserted right after its anchor block.
+const OPTIONALS = [
+  {id:"diaExtra", insertAfter:"dia5"}
+];
+const MIN_DAYS = CORE_ORDER.length;            // 6
+const MAX_DAYS = CORE_ORDER.length + OPTIONALS.length; // 7
+
+function assembleBlockOrder(totalDays){
+  totalDays = Math.max(MIN_DAYS, Math.min(MAX_DAYS, totalDays));
+  let order = [...CORE_ORDER];
+  const extra = totalDays - MIN_DAYS;
+  OPTIONALS.slice(0, extra).forEach(opt=>{
+    const idx = order.indexOf(opt.insertAfter);
+    order.splice(idx + 1, 0, opt.id);
+  });
+  return order;
+}
+
+function buildScheduleDays(totalDays, arrivalDateStr, arrivalTime){
+  const order = assembleBlockOrder(totalDays);
+  const arrival = parseDateInput(arrivalDateStr);
+  const nights = order.length - 1;
+  return order.map((id, i)=>{
+    const block = BLOCKS.find(b=>b.id===id);
+    const date = addDays(arrival, i);
+    const day = {
+      ...block,
+      num: i + 1,
+      weekday: formatWeekday(date),
+      weekdayShort: formatWeekdayShort(date),
+      dateLabel: formatDateShort(date)
+    };
+    if(id === "dia1"){
+      day.base = `Gualeguaychú — ${nights} noche${nights === 1 ? '' : 's'}`;
+    }
+    if(i === 0 && arrivalTime){
+      const isEvening = arrivalTime > "18:00";
+      day.narrative = `Llegada a las ${arrivalTime} hs en micro desde la Terminal de Liniers. Directo al alojamiento en el centro y, antes de la cena, una vuelta corta por la Costanera y el Paseo del Puerto para empezar a agarrarle el pulso a la ciudad.` +
+        (isEvening ? ` Como llegás bien entrada la noche, capaz conviene dejar el paseo por la Costanera para la mañana siguiente y priorizar instalarse y cenar tranquilo.` : '');
+    }
+    return day;
+  });
+}
+
+let tripConfig = { totalDays: 6, arrivalDate: todayISO(), arrivalTime: "15:00" };
+let DAYS = buildScheduleDays(tripConfig.totalDays, tripConfig.arrivalDate, tripConfig.arrivalTime);
+
+/* ===================== ACCESIBILIDAD ===================== */
+const LINE_VALUES = [1.35, 1.55, 1.8, 2.1];
+const LINE_LABELS = ['Compacto','Normal','Amplio','Muy amplio'];
+const A11Y_DEFAULTS = { fontSize:100, lineIdx:1, highContrast:false, darkMode:false, reduceMotion:false };
+let a11yState = { ...A11Y_DEFAULTS };
+
+function applyA11y(){
+  const scale = a11yState.fontSize / 100;
+  const s = document.getElementById('sections');
+  if(s) s.style.zoom = scale;
+  document.body.style.lineHeight = LINE_VALUES[a11yState.lineIdx];
+  document.body.classList.toggle('a11y-high-contrast', a11yState.highContrast);
+  document.body.classList.toggle('a11y-dark', a11yState.darkMode);
+  document.body.classList.toggle('a11y-reduce-motion', a11yState.reduceMotion);
+  syncA11yControls();
+}
+
+function syncA11yControls(){
+  const fv = document.getElementById('fontValue');
+  const lv = document.getElementById('lineValue');
+  const hc = document.getElementById('a11yHighContrast');
+  const dm = document.getElementById('a11yDarkMode');
+  const rm = document.getElementById('a11yReduceMotion');
+  if(fv) fv.textContent = a11yState.fontSize + '%';
+  if(lv) lv.textContent = LINE_LABELS[a11yState.lineIdx];
+  if(hc) hc.checked = a11yState.highContrast;
+  if(dm) dm.checked = a11yState.darkMode;
+  if(rm) rm.checked = a11yState.reduceMotion;
+}
+
+async function saveA11y(){
+  await appStorage.set('a11y', JSON.stringify(a11yState));
+}
+
+(async function loadA11y(){
+  try{
+    const res = await appStorage.get('a11y');
+    if(res && res.value){
+      const saved = JSON.parse(res.value);
+      a11yState = { ...A11Y_DEFAULTS, ...saved };
+    }
+  }catch(e){}
+  applyA11y();
+})();
+
+/* ===================== EXTRAS (lugares opcionales no incluidos en el itinerario) ===================== */
+const EXTRAS = [
+  {
+    zone:"Gualeguaychú — Centro",
+    places:[
+      {
+        name:"Casa Natal de Fray Mocho",
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Museo dedicado a José S. Álvarez, \"Fray Mocho\" (1858-1903), escritor y periodista gualeguaychuense, una de las plumas más queridas del costumbrismo argentino. Sala histórica sobre su vida y su época.",
+        tip:"Se puede combinar con la visita a la Azotea de Lapalma, ya que ambas dependen del mismo circuito de casas-museo municipales.",
+        price:"Gratis / entrada económica", icon:"✒️"
+      },
+      {
+        name:"Museo Casa de Andrade",
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Uno de los edificios característicos del centro histórico, mencionado junto al Cine Palma, la Unión Francesa y los Tribunales como referencias arquitectónicas de la ciudad.",
+        tip:"Buena parada corta si se está recorriendo el centro a pie, cerca de la Plaza San Martín.",
+        price:"Consultar", icon:"🏛️"
+      },
+      {
+        name:"Casino de Gualeguaychú",
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Casino temático sobre la Costanera, una de las propuestas nocturnas de la ciudad junto con confiterías bailables y pubs con espectáculos.",
+        tip:"Buena opción para una salida nocturna adicional si sobra tiempo alguna noche del viaje.",
+        price:"Entrada según juego/consumo", icon:"🎰"
+      },
+      {
+        name:"Playa Papaya",
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Espacio sobre la costa del río, con bar, comida y alquiler de kayaks para un paseo corto por el agua sin necesidad de excursión organizada.",
+        tip:"Buena alternativa si un día sobra una tarde libre y hace calor — no siempre se puede nadar, pero el kayak es una opción segura.",
+        price:"Consumo en el lugar + alquiler de kayak aparte", icon:"🛶"
+      }
+    ]
+  },
+  {
+    zone:"Parque Unzué y alrededores",
+    places:[
+      {
+        name:"Kartódromo, Velódromo y Club Hípico",
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Dentro del Parque Unzué, en la zona del \"Unzué Chico\", hay instalaciones deportivas para quienes quieran sumar una actividad extra al paseo por el parque.",
+        tip:"Consultar en el momento si hay actividad o competencia programada ese día.",
+        price:"Consultar", icon:"🏇"
+      },
+      {
+        name:"Centro de Interpretación del Patrimonio Natural La Delfina",
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Espacio didáctico dentro de la Reserva Natural Parque Florístico, sobre los ecosistemas de humedal y monte nativo de la región.",
+        tip:"Buen complemento a la caminata por el Unzué Grande, sobre todo para viajar con chicos.",
+        price:"Consultar", icon:"🌿"
+      }
+    ]
+  },
+  {
+    zone:"Alrededores y Delta",
+    places:[
+      {
+        name:"Playas del río Gualeguaychú (Solar del Este, Balneario Municipal)",
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Alternativa más chica y urbana a Ñandubaysal, a pocas cuadras del centro — útil si un día no hay tiempo para el traslado hasta el río Uruguay.",
+        tip:"En época de creciente estas playas pueden quedar cubiertas por el río; conviene confirmar el estado antes de ir.",
+        price:"Gratis / entrada económica según balneario", icon:"🏖️"
+      },
+      {
+        name:"Estancia La Azotea, Ceibas",
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Casco de estancia construido en 1868, a unos 10 km de Villa Paranacito, con un aljibe original en el patio central. Buena parada si se hace el trayecto en auto o remís propio.",
+        tip:"Consultar si se puede visitar el casco o solo se ve desde el camino, ya que es un campo privado en producción.",
+        price:"Consultar", icon:"🏚️"
+      },
+      {
+        name:"Ibicuy y los pastizales naturales",
+        img:IMG("Costanera Río Gualeguaychú.jpg"),
+        desc:"Más al sur del delta entrerriano, una zona de pastizales, médanos y humedales para el avistaje de aves — destino para quienes quieran sumar un segundo día de naturaleza en la zona.",
+        tip:"Requiere un traslado adicional y coordinar guías locales; no es una parada de paso, sino un destino en sí mismo.",
+        price:"Consultar", icon:"🦆"
+      }
+    ]
+  }
+];
+
+const TIPS = [
+  {icon:"🚌", title:"Cómo llegar sin auto", body:"Desde la Terminal de Liniers (Av. General Paz 10868) hay micros directos casi todo el día (Nuevo Expreso, Rápido Tata, entre otras), unas 11 frecuencias diarias y un viaje de unas 4 horas. El centro de Gualeguaychú se recorre bien a pie o en bici."},
+  {icon:"🎭", title:"Temporada de Carnaval", body:"El Carnaval del País se hace los sábados de enero y febrero en el Corsódromo. Si el viaje cae en esa temporada, el alojamiento conviene reservarlo con mucha anticipación — se llena rápido. Fuera de esas fechas, el Museo del Carnaval y el Corsódromo igual se pueden visitar."},
+  {icon:"🦟", title:"Repelente de mosquitos", body:"Por la cercanía a los ríos y humedales (Parque Unzué, Costanera, Delta), conviene llevar repelente, sobre todo al atardecer y en los paseos por el Unzué Grande o Villa Paranacito."},
+  {icon:"☀️", title:"Sol y protector solar", body:"Tanto en las Termas como en Ñandubaysal y los paseos en lancha por el Delta, el sol pega fuerte incluso con el agua fría — protector solar y gorro son casi obligatorios."},
+  {icon:"🌊", title:"Crecidas del río", body:"En épocas de creciente, las playas del río Gualeguaychú y parte del Parque Unzué pueden quedar cubiertas por el agua. Conviene confirmar el estado de las playas antes de planificar esa parte del día."},
+  {icon:"💳", title:"Efectivo", body:"En Villa Paranacito, en los puestos regionales y en varias artesanías del centro no siempre hay posnet — llevar efectivo para no quedarse sin opciones."},
+  {icon:"🕒", title:"Museos con horario acotado", body:"El Museo Casa de Haedo abre de miércoles a domingos de 9 a 12 h y de miércoles a sábados de 15:30 a 18:30 h. Conviene confirmar los horarios de los museos chicos (Azotea de Lapalma, Fray Mocho, Instituto Magnasco) antes de planificar esa parte del día."},
+  {icon:"🍽️", title:"Horarios de comida", body:"Como en buena parte del interior del país, los restaurantes suelen abrir recién a las 20-21 h para la cena, más tarde que en otras ciudades."},
+  {icon:"🚴", title:"Bicicleta", body:"El centro y el Parque Unzué son ideales para recorrer en bici — muchos alojamientos las alquilan o las prestan, y evita depender de remises para los tramos más cortos."},
+  {icon:"🏝️", title:"Isla Libertad", body:"El \"castillo\" de la Isla Libertad es propiedad privada: no se visita por dentro, pero se ve muy bien (y se fotografía mejor) desde la Costanera y el Paseo del Puerto."},
+  {icon:"🛂", title:"Cruce a Uruguay", body:"Si se suma el día extra al Puente Internacional y se quiere cruzar a Fray Bentos, hace falta DNI o pasaporte vigente: es un paso fronterizo internacional con control migratorio."},
+  {icon:"🐟", title:"Pescado de río", body:"Surubí, boga, dorado y pacú son los protagonistas de buena parte de la carta en los restaurantes de la Costanera y en Villa Paranacito — vale la pena animarse a probarlos."},
+  {icon:"🎒", title:"Equipaje", body:"Al ser un viaje de una sola base (Gualeguaychú), no hace falta armar bolsos separados como en destinos con varias paradas — con una valija y una mochila para el día alcanza y sobra."}
+];
+
+const CHECKLIST_ITEMS = [
+  "Documento / DNI (o pasaporte si se cruza a Uruguay)",
+  "Reserva de alojamiento en el centro",
+  "Pasajes de micro Liniers ↔ Gualeguaychú",
+  "Protector solar y gorro",
+  "Repelente de mosquitos",
+  "Traje de baño y toalla",
+  "Calzado cómodo para caminar",
+  "Efectivo para artesanías, feria y puestos regionales",
+  "Ropa liviana + algo de abrigo para la noche",
+  "Cámara / cargador y power bank",
+  "Coordinar con anticipación el remís o combi a Villa Paranacito",
+  "Confirmar horarios de museos chicos antes de ir",
+  "Bolsa extra para las compras regionales de despedida",
+  "Chequear estado de las playas si hay crecida del río"
+];
+
+/* ===================== RENDER ===================== */
+const tabbar = document.getElementById('tabbar');
+const sectionsRoot = document.getElementById('sections');
+
+function buildItinerarioSection(){
+  const wrap = document.createElement('div');
+  wrap.className = 'section'; wrap.id = 'sec-itinerario'; wrap.setAttribute('role','region'); wrap.setAttribute('aria-label','Itinerario'); wrap.setAttribute('tabindex','-1');
+
+  const subTabs = document.createElement('div');
+  subTabs.className = 'tabbar'; subTabs.style.position='static'; subTabs.style.borderBottom='none'; subTabs.style.padding='0 0 14px';
+  DAYS.forEach((d,i)=>{
+    const b = document.createElement('button');
+    b.className = 'tab' + (i===0?' active':'');
+    b.textContent = d.weekdayShort ? `${d.weekdayShort} ${d.dateLabel}` : `Día ${d.num}`;
+    b.onclick = ()=>{ showDay(d.id); [...subTabs.children].forEach(c=>c.classList.remove('active')); b.classList.add('active'); };
+    subTabs.appendChild(b);
+  });
+  wrap.appendChild(subTabs);
+
+  DAYS.forEach((day, idx)=>{
+    const dayDiv = document.createElement('div');
+    dayDiv.className = 'day-block';
+    dayDiv.id = 'day-'+day.id;
+    dayDiv.style.display = idx===0 ? 'block':'none';
+
+    dayDiv.innerHTML = `
+      <div class="day-banner">
+        <div class="num">${day.weekday ? day.weekday + (day.dateLabel ? ' ' + day.dateLabel : '') + ' · Día ' + day.num : 'Día ' + day.num}</div>
+        <h2>${day.title}</h2>
+        <div class="base">📍 ${day.base}</div>
+      </div>
+      <div class="narrative">${day.narrative}</div>
+    `;
+
+    day.stops.forEach((s, sIdx)=>{
+      const stopId = `${day.id}-stop-${sIdx}`;
+      const card = document.createElement('div');
+      card.className = 'stop';
+      card.innerHTML = `
+        <img src="${s.img}" alt="${s.name}" loading="lazy" onerror="this.style.display='none'">
+        <span class="stop-visited-badge">✓ Visitado</span>
+        <div class="stop-body">
+          <div class="stop-head-row">
+            <span class="stop-time">${s.time}</span>
+            <label class="visited-toggle">
+              <input type="checkbox" class="visited-check" data-stop="${stopId}">
+              <span>Visitado</span>
+            </label>
+          </div>
+          <h3>${s.name}</h3>
+          <p class="desc">${s.desc}</p>
+          <div class="badges">
+            ${s.duration ? `<span class="badge">⏱ ${s.duration}</span>` : ''}
+            ${s.price ? `<span class="badge">💰 ${s.price}</span>` : ''}
+            ${s.checklist && s.checklist.length ? `<span class="badge stop-progress-badge" data-progress-for="${stopId}">✅ 0/${s.checklist.length}</span>` : ''}
+          </div>
+          <button class="pill-toggle" data-target="${stopId}" aria-expanded="false" aria-controls="${stopId}">
+            <span class="arrow" aria-hidden="true">▶</span><span class="toggle-label"> Ver más: historia, curiosidad y tips</span>
+          </button>
+          <div class="extra" id="${stopId}">
+            ${s.history ? `<div class="block">
+              <div class="label hist">📜 Historia</div>
+              <p>${s.history}</p>
+            </div>` : ''}
+            ${s.curiosity ? `<div class="block">
+              <div class="label">💡 Curiosidad</div>
+              <p>${s.curiosity}</p>
+            </div>` : ''}
+            <div class="block">
+              <div class="label tip">🎒 Tip</div>
+              <p>${s.tip}</p>
+            </div>
+            ${s.winterTip ? `<div class="block winter-block">
+              <div class="label winter">🗓️ Tip de temporada</div>
+              <p>${s.winterTip}</p>
+            </div>` : ''}
+            ${s.schedule && s.schedule.length ? `<div class="block schedule-block">
+              <div class="label schedule">🕐 Horarios</div>
+              <div class="schedule-row">${s.schedule.join(' · ')}</div>
+              <div class="schedule-note">${s.scheduleNote || ''}</div>
+            </div>` : ''}
+            ${s.roadStatus ? `<div class="block road-status-block">
+              <div class="label road">🚧 Estado de la ruta</div>
+              <p>${s.roadStatus}</p>
+              <div class="road-contacts">${(s.roadContacts || []).join('<br>')}</div>
+            </div>` : ''}
+            ${s.access ? `<div class="block">
+              <div class="label acc">👂 Accesibilidad</div>
+              <p>${s.access}</p>
+            </div>` : ''}
+            ${s.checklist && s.checklist.length ? `<div class="block">
+              <div class="label check">✅ Checklist para este lugar</div>
+              <div class="stop-checklist" data-stop="${stopId}">
+                ${s.checklist.map((item, i) => `
+                  <label class="check-item-mini">
+                    <input type="checkbox" data-idx="${i}">
+                    <span>${item}</span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>` : ''}
+          </div>
+        </div>
+      `;
+      dayDiv.appendChild(card);
+    });
+
+    wrap.appendChild(dayDiv);
+  });
+
+  return wrap;
+}
+
+function showDay(id){
+  document.querySelectorAll('.day-block').forEach(d=>{
+    d.style.display = (d.id === 'day-'+id) ? 'block' : 'none';
+  });
+}
+
+function buildCuriosidadesSection(){
+  const wrap = document.createElement('div');
+  wrap.className = 'section'; wrap.id = 'sec-curiosidades'; wrap.setAttribute('role','region'); wrap.setAttribute('aria-label','Curiosidades'); wrap.setAttribute('tabindex','-1');
+  wrap.innerHTML = `<h2 class="section-title">Curiosidades de Gualeguaychú</h2>
+    <p class="section-sub">Todas las curiosidades reunidas en un solo lugar, por día.</p>`;
+
+  DAYS.forEach(day=>{
+    const banner = document.createElement('div');
+    banner.innerHTML = `<h3 style="color:var(--verde);font-size:1.05rem;margin:18px 0 8px;">${day.weekday ? day.weekday+' · ' : ''}Día ${day.num} · ${day.title}</h3>`;
+    wrap.appendChild(banner);
+    day.stops.forEach(s=>{
+      if(!s.curiosity) return;
+      const c = document.createElement('div');
+      c.className = 'curio-banner';
+      c.innerHTML = `<div class="label">${s.name}</div>${s.curiosity}`;
+      wrap.appendChild(c);
+    });
+  });
+  return wrap;
+}
+
+const HISTORIA = [
+  {
+    icon:"🏹", period:"Hasta el siglo XVIII", title:"Pueblos originarios del litoral",
+    paragraphs:[
+      "Antes de la llegada española, el territorio que hoy ocupa Gualeguaychú estaba habitado por distintos grupos originarios del litoral: chanás y timbúes en el sur, cerca del Delta, y charrúas que se desplazaban por las zonas próximas al río Uruguay. Todos ellos eran, según las crónicas de la época, expertos conocedores de ríos y arroyos, con piraguas propias y buen manejo del arco y la flecha.",
+      "A partir del siglo XVI llegaron los primeros colonizadores europeos a la región, desde tres frentes distintos: Santa Fe por el oeste, las misiones jesuíticas por el norte y Buenos Aires por el sur. Durante casi dos siglos, la actual Entre Ríos se pobló de manera dispersa y precaria, con estancias y postas aisladas en constante tensión con los pueblos originarios."
+    ]
+  },
+  {
+    icon:"🏘️", period:"1783", title:"La fundación de la Villa de San José de Gualeguaychú",
+    paragraphs:[
+      "El 18 de octubre de 1783, por orden del virrey Vértiz, el capitán Tomás de Rocamora fundó la Villa de San José de Gualeguaychú, la tercera de las tres villas que fundó ese mismo año en el territorio entrerriano, junto con Concepción del Uruguay y Gualeguay. Estas fundaciones respondían a la necesidad de controlar militarmente la región frente a los portugueses y a los contrabandistas de la zona.",
+      "Rocamora llegó a un poblado preexistente, pero lo encontró bajo, anegadizo y rodeado de pajonales, así que decidió trasladarlo más al norte, a una cuchilla amplia frente a la isla que hoy se conoce como Isla Libertad. Ahí trazó el clásico damero español: desbrozó el terreno, repartió 85 solares entre los primeros vecinos, eligió como Santo Patrono a San José y formó el primer Cabildo, con Vicente Navarro como alcalde.",
+      "El nombre \"Gualeguaychú\" vendría, según el padre Policarpo Dufó, de una deformación de la expresión guaraní \"Yaguarí Guazú\", que se traduciría como \"Río del Tigre Grande\" — en referencia al río que le da nombre a la ciudad. La Villa recién fue elevada a la categoría de ciudad el 4 de noviembre de 1851, por decreto del gobernador Justo José de Urquiza."
+    ]
+  },
+  {
+    icon:"⚔️", period:"Siglo XIX", title:"La Isla Libertad, Urquiza y el Ejército Grande",
+    paragraphs:[
+      "Durante buena parte del siglo XIX, la Isla Libertad —frente al puerto de Gualeguaychú— fue escenario de hechos que excedían la vida tranquila del pueblo. Perteneció en algún momento a Justo José de Urquiza y fue visitada por Domingo Faustino Sarmiento. En 1851, la isla fue uno de los puntos donde se organizaron las tratativas para formar el \"Ejército Grande\", la coalición que Urquiza lideraría contra Juan Manuel de Rosas y que terminaría venciéndolo en la batalla de Caseros, el 3 de febrero de 1852.",
+      "En esos años llegaron a la isla antirrosistas de distintas procedencias, junto con diplomáticos brasileños y uruguayos que se sumaban a la campaña militar. La Iglesia San Antonio (hoy Catedral San José), frente a la actual Plaza San Martín, se había terminado de construir en 1836, después de empezar sus obras por 1807, y ya era uno de los edificios de referencia del pueblo."
+    ]
+  },
+  {
+    icon:"🚂", period:"1876 – 1929", title:"Auge portuario, ferrocarril e inmigración",
+    paragraphs:[
+      "Durante el siglo XIX, el puerto de Gualeguaychú se convirtió en uno de los más importantes de cabotaje del país, con un muelle de 200 metros de largo por el que entraban y salían pasajeros, mercaderías e inmigrantes. En 1890 llegó el ramal del Ferrocarril Central Entrerriano, que conectó a la ciudad con su estación y, a través de un tranvía, con el propio puerto.",
+      "La llegada del ferrocarril y el crecimiento portuario atrajeron una fuerte ola de inmigración europea, que dejó su huella en la arquitectura del centro (como la Azotea de Lapalma, de rasgos italianizantes) y en la vida social y comercial de la ciudad. En 1929 se instaló un frigorífico a orillas del río, iniciativa de la Cooperativa Ganadera, que impulsó la creación de un nuevo barrio (Pueblo Nuevo) y nuevas vías férreas."
+    ]
+  },
+  {
+    icon:"🎭", period:"Fines del siglo XIX – 1997", title:"De los corsos de barrio al Carnaval del País",
+    paragraphs:[
+      "Los festejos de carnaval en Gualeguaychú existen desde fines del siglo XIX, cuando los corsos se hacían de tarde porque la ciudad todavía no tenía luz eléctrica (que llegaría recién en 1907). En 1876, un decreto del entonces gobernador Justo José de Urquiza había prohibido \"para siempre\" las mascaradas, aunque la prohibición no logró frenar del todo la tradición: en 1880 se reglamentó de nuevo el juego de carnaval, con horarios y permisos municipales.",
+      "Durante buena parte del siglo XX los corsos alternaron entre el entusiasmo popular y períodos de decadencia, con juegos violentos que alejaron a las familias de los festejos. El punto de inflexión llegó en 1978, cuando el comerciante Luis \"Ike\" Daroca propuso reorganizar los corsos bajo un formato nuevo: solo instituciones (no particulares) podían organizar comparsas, y en 1979 se hizo el primer corso bajo ese esquema.",
+      "El crecimiento fue tan rápido que en 1997 se inauguró el Corsódromo, con capacidad para decenas de miles de espectadores por noche. Hoy el Carnaval del País reúne cada verano a cinco comparsas (Papelitos —la más antigua, fundada en 1977—, O'Bahía, Ará Yeví, Kamarr y Marí Marí), con carrozas de hasta 17 metros y trajes que pueden llevar más de 50.000 plumas por comparsa."
+    ]
+  },
+  {
+    icon:"🌊", period:"2005 – 2010", title:"El conflicto de las papeleras",
+    paragraphs:[
+      "A comienzos de los 2000, el anuncio de la instalación de plantas de celulosa (entre ellas Botnia, luego UPM) en la costa uruguaya frente a Gualeguaychú generó un conflicto ambiental y diplomático de gran escala entre Argentina y Uruguay. En la ciudad nació la Asamblea Ciudadana Ambiental de Gualeguaychú, un grupo de vecinos autoconvocados que se convirtió en el motor de la protesta.",
+      "El 30 de abril de 2005 se realizó una marcha masiva al Puente Internacional General San Martín, con una participación estimada de 40.000 personas. A partir de noviembre de 2006, la Asamblea mantuvo cortes prolongados del puente que uniría Gualeguaychú con Fray Bentos, interrumpiendo el paso fronterizo durante varios años y generando roces con el gobierno uruguayo y, en algunos momentos, con el propio gobierno argentino.",
+      "El conflicto llegó a la Corte Internacional de Justicia de La Haya, que en abril de 2010 falló que Uruguay había violado el tratado del río Uruguay al no informar debidamente a la contraparte argentina, aunque no encontró pruebas suficientes de contaminación real del río. La planta de celulosa siguió funcionando del lado uruguayo, y el corte del puente se levantó, aunque la Asamblea sigue realizando movilizaciones conmemorativas cada aniversario."
+    ]
+  },
+  {
+    icon:"🎣", period:"Hoy", title:"Gualeguaychú hoy: identidad de río, carnaval y naturaleza",
+    paragraphs:[
+      "Hoy Gualeguaychú combina su identidad histórica —la del casco fundacional en damero y las casas-museo coloniales— con su perfil más conocido puertas afuera: el Carnaval del País, las playas del río Uruguay, las termas y el Delta entrerriano. La ciudad es cuna de figuras como José S. Álvarez (\"Fray Mocho\"), escritor y periodista; Osvaldo Magnasco, jurista y político; y José María Sobral, uno de los primeros exploradores antárticos argentinos.",
+      "La economía combina turismo, agricultura y ganadería, con el río y sus paisajes como el gran atractivo constante: desde el Parque Unzué y la Costanera en el propio centro, hasta las playas de Ñandubaysal y los canales del Delta hacia el sur, en Villa Paranacito e Ibicuy — todos destinos que conviven a lo largo del mismo río que le dio nombre a la ciudad hace más de dos siglos."
+    ]
+  }
+];
+
+
+function buildTipsSection(){
+  const wrap = document.createElement('div');
+  wrap.className = 'section'; wrap.id = 'sec-tips'; wrap.setAttribute('role','region'); wrap.setAttribute('aria-label','Tips'); wrap.setAttribute('tabindex','-1');
+  wrap.innerHTML = `<h2 class="section-title">Tips e historia</h2>
+    <p class="section-sub">Lo esencial para el viaje, y el trasfondo histórico de Gualeguaychú.</p>
+    <div class="subtab-bar">
+      <button class="subtab active" data-subtab="tips">🎒 Tips</button>
+      <button class="subtab" data-subtab="historia">📖 Historia</button>
+    </div>
+    <div id="tipsPane"></div>
+    <div id="historiaPane" style="display:none;"></div>
+  `;
+
+  const tipsPane = wrap.querySelector('#tipsPane');
+  TIPS.forEach(t=>{
+    const c = document.createElement('div');
+    c.className = 'tip-card';
+    c.innerHTML = `<h4>${t.icon} ${t.title}</h4><p>${t.body}</p>`;
+    tipsPane.appendChild(c);
+  });
+
+  const historiaPane = wrap.querySelector('#historiaPane');
+  HISTORIA.forEach(era=>{
+    const c = document.createElement('div');
+    c.className = 'era-block';
+    c.innerHTML = `
+      <div class="era-header">
+        <span class="era-icon">${era.icon}</span>
+        <div>
+          <div class="era-period">${era.period}</div>
+          <h4 class="era-title">${era.title}</h4>
+        </div>
+      </div>
+      <div class="era-text">${era.paragraphs.map(p=>`<p>${p}</p>`).join('')}</div>
+    `;
+    historiaPane.appendChild(c);
+  });
+
+  wrap.querySelectorAll('.subtab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      wrap.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const isTips = btn.dataset.subtab === 'tips';
+      tipsPane.style.display = isTips ? 'block' : 'none';
+      historiaPane.style.display = isTips ? 'none' : 'block';
+    });
+  });
+
+  return wrap;
+}
+
+function buildChecklistSection(){
+  const wrap = document.createElement('div');
+  wrap.className = 'section'; wrap.id = 'sec-checklist'; wrap.setAttribute('role','region'); wrap.setAttribute('aria-label','Checklist'); wrap.setAttribute('tabindex','-1');
+  wrap.innerHTML = `<h2 class="section-title">Checklist de viaje</h2>
+    <p class="section-sub">Se guarda automáticamente en este dispositivo.</p>
+    <div id="checklistItems"></div>`;
+  return wrap;
+}
+
+/* ===================== CLIMA (Open-Meteo, sin API key) ===================== */
+const CIUDADES = [
+  { name:'Gualeguaychú', lat:-33.0097, lon:-58.5116, dias:['dia1','dia2','dia3','dia4','dia6','diaExtra'] },
+  { name:'Villa Paranacito', lat:-33.700, lon:-58.683, dias:['dia5'] }
+];
+
+const WMO_DESC = {
+  0:'Despejado', 1:'Mayormente despejado', 2:'Parcialmente nublado', 3:'Nublado',
+  45:'Niebla', 48:'Niebla con escarcha',
+  51:'Llovizna leve', 53:'Llovizna', 55:'Llovizna intensa',
+  61:'Lluvia leve', 63:'Lluvia', 65:'Lluvia intensa',
+  71:'Nieve leve', 73:'Nieve', 75:'Nieve intensa',
+  80:'Lluvias aisladas', 81:'Lluvias', 82:'Lluvias fuertes',
+  85:'Nevadas aisladas', 86:'Nevadas',
+  95:'Tormenta', 96:'Tormenta con granizo', 99:'Tormenta intensa'
+};
+const WMO_ICON = {
+  0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
+  45:'🌫️', 48:'🌫️',
+  51:'🌦️', 53:'🌦️', 55:'🌧️',
+  61:'🌦️', 63:'🌧️', 65:'🌧️',
+  71:'🌨️', 73:'❄️', 75:'❄️',
+  80:'🌦️', 81:'🌧️', 82:'⛈️',
+  85:'🌨️', 86:'❄️',
+  95:'⛈️', 96:'⛈️', 99:'⛈️'
+};
+
+function wmoIcon(code){ return WMO_ICON[code] || '🌡️'; }
+function wmoDesc(code){ return WMO_DESC[code] || 'Variable'; }
+
+async function fetchClimaForCity(city, dates){
+  const start = dates[0];
+  const end = dates[dates.length-1];
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_sum,windspeed_10m_max,precipitation_probability_max&timezone=America%2FArgentina%2FBuenos_Aires&start_date=${start}&end_date=${end}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.daily;
+}
+
+function buildClimaSection(){
+  const wrap = document.createElement('div');
+  wrap.className = 'section'; wrap.id = 'sec-clima';
+  wrap.setAttribute('role','region'); wrap.setAttribute('aria-label','Clima'); wrap.setAttribute('tabindex','-1');
+
+  wrap.innerHTML = `
+    <h2 class="section-title">🌤️ Clima del viaje</h2>
+    <p class="section-sub">Pronóstico por ciudad. Tocá cada día para ver detalles.</p>
+    <div id="climaContent"><div class="clima-loading">⏳ Cargando pronóstico...</div></div>
+  `;
+
+  // Load weather lazily when section is first activated
+  wrap._climaLoaded = false;
+  return wrap;
+}
+
+async function loadClima(){
+  const sec = document.getElementById('sec-clima');
+  if(!sec || sec._climaLoaded) return;
+  sec._climaLoaded = true;
+
+  const container = document.getElementById('climaContent');
+  try{
+    // Gather unique dates from DAYS
+    const dayMap = {};
+    DAYS.forEach(d=>{ dayMap[d.id] = d; });
+
+    let html = '';
+    const isForecast = (dateStr)=>{
+      const today = new Date();
+      const d = new Date(dateStr);
+      const diff = (d - today) / 86400000;
+      return diff <= 15;
+    };
+
+    for(const city of CIUDADES){
+      // Dates for this city = days whose id matches city.dias
+      const cityDays = DAYS.filter(d=> city.dias.includes(d.id));
+      if(!cityDays.length) continue;
+
+      const dates = cityDays.map(d=> tripConfig.arrivalDate
+        ? (() => {
+            const arr = parseDateInput(tripConfig.arrivalDate);
+            const offset = DAYS.indexOf(d);
+            const dt = addDays(arr, offset);
+            return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+          })()
+        : tripConfig.arrivalDate
+      );
+
+      const daily = await fetchClimaForCity(city, dates);
+
+      html += `<div class="clima-city-title">📍 ${city.name}</div><div class="clima-cards">`;
+
+      dates.forEach((date, i)=>{
+        const dayObj = cityDays[i];
+        const idx = daily.time.indexOf(date);
+        if(idx === -1) return;
+        const max = Math.round(daily.temperature_2m_max[idx]);
+        const min = Math.round(daily.temperature_2m_min[idx]);
+        const code = daily.weathercode[idx];
+        const precip = daily.precipitation_sum[idx] ?? 0;
+        const wind = Math.round(daily.windspeed_10m_max[idx] ?? 0);
+        const precipProb = daily.precipitation_probability_max[idx] ?? 0;
+        const cardId = `clima-${city.lat}-${i}`;
+        const forecast = isForecast(date);
+
+        html += `<div class="clima-card" id="${cardId}" onclick="this.classList.toggle('open')">
+          <div class="clima-card-header">
+            <div class="clima-date">
+              ${dayObj.weekday} ${dayObj.dateLabel}
+              <div class="clima-date-sub">${dayObj.title}</div>
+            </div>
+            <span class="clima-icon">${wmoIcon(code)}</span>
+            <div class="clima-temps">
+              <div class="clima-max">${max}°</div>
+              <div class="clima-min">${min}°</div>
+            </div>
+          </div>
+          <div class="clima-desc">${wmoDesc(code)}</div>
+          <div class="clima-detail">
+            <div class="clima-detail-item">
+              <span class="clima-detail-label">Lluvia</span>
+              <span class="clima-detail-val">${precip.toFixed(1)} mm</span>
+            </div>
+            <div class="clima-detail-item">
+              <span class="clima-detail-label">Prob. lluvia</span>
+              <span class="clima-detail-val">${precipProb}%</span>
+            </div>
+            <div class="clima-detail-item">
+              <span class="clima-detail-label">Viento máx.</span>
+              <span class="clima-detail-val">${wind} km/h</span>
+            </div>
+            <div class="clima-detail-item">
+              <span class="clima-detail-label">Fuente</span>
+              <span class="clima-detail-val">Open-Meteo</span>
+            </div>
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    const disclaimer = `<p class="clima-disclaimer">
+      ${isForecast(tripConfig.arrivalDate)
+        ? '⚠️ El pronóstico es más confiable para los próximos 7 días. Para fechas más lejanas los datos son estimaciones climáticas históricas para esa época del año, no un pronóstico real.'
+        : '📅 Tu viaje está a más de 15 días — los datos muestran el promedio histórico para esa época del año en cada ciudad, no un pronóstico real. Volvé a consultar cuando se acerque la fecha.'}
+    </p>`;
+
+    container.innerHTML = html + disclaimer;
+  }catch(e){
+    container.innerHTML = `<div class="clima-error">
+      ⚠️ No se pudo cargar el pronóstico. Verificá tu conexión a internet e intentá de nuevo.<br><br>
+      <button onclick="document.getElementById('sec-clima')._climaLoaded=false; loadClima();" style="margin-top:8px;padding:8px 16px;background:var(--verde);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;">Reintentar</button>
+    </div>`;
+  }
+}
+
+function buildExtrasSection(){
+  const wrap = document.createElement('div');
+  wrap.className = 'section'; wrap.id = 'sec-extras';
+  wrap.setAttribute('role','region'); wrap.setAttribute('aria-label','Extras'); wrap.setAttribute('tabindex','-1');
+
+  let html = `<h2 class="section-title">✨ Lugares extras</h2>
+    <p class="section-sub">Opcionales no incluidos en el itinerario — para si sobra tiempo o querés explorar más.</p>`;
+
+  EXTRAS.forEach(group=>{
+    html += `<h3 class="extras-zone-title">${group.zone}</h3>`;
+    group.places.forEach(p=>{
+      html += `<div class="extras-card">
+        <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
+        <div class="extras-body">
+          <div class="extras-header">
+            <span class="extras-icon">${p.icon}</span>
+            <h4 class="extras-name">${p.name}</h4>
+            <span class="badge">${p.price}</span>
+          </div>
+          <p class="extras-desc">${p.desc}</p>
+          <div class="extras-tip">🎒 ${p.tip}</div>
+        </div>
+      </div>`;
+    });
+  });
+
+  wrap.innerHTML = html;
+  return wrap;
+}
+
+function buildAjustesSection(){
+  const wrap = document.createElement('div');
+  wrap.className = 'section'; wrap.id = 'sec-ajustes';
+  wrap.setAttribute('role','region'); wrap.setAttribute('aria-label','Ajustes'); wrap.setAttribute('tabindex','-1');
+
+  wrap.innerHTML = `
+    <h2 class="section-title">⚙️ Ajustes</h2>
+    <p class="section-sub">Los cambios se aplican al instante y se guardan automáticamente.</p>
+
+    <div class="ajustes-group">
+      <div class="ajustes-group-title">Tamaño del texto</div>
+      <div class="ajustes-row">
+        <span class="ajustes-row-label">Tamaño de fuente</span>
+        <div class="ajustes-stepper">
+          <button class="ajustes-step-btn" id="fontDecrease" aria-label="Reducir texto">−</button>
+          <span class="ajustes-step-val" id="fontValue">100%</span>
+          <button class="ajustes-step-btn" id="fontIncrease" aria-label="Aumentar texto">+</button>
+        </div>
+      </div>
+      <div class="ajustes-row">
+        <span class="ajustes-row-label">Interlineado</span>
+        <div class="ajustes-stepper">
+          <button class="ajustes-step-btn" id="lineDecrease" aria-label="Reducir interlineado">−</button>
+          <span class="ajustes-step-val" id="lineValue">Normal</span>
+          <button class="ajustes-step-btn" id="lineIncrease" aria-label="Aumentar interlineado">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ajustes-group">
+      <div class="ajustes-group-title">Apariencia</div>
+      <label class="ajustes-toggle-row">
+        <span>Alto contraste</span>
+        <input type="checkbox" id="a11yHighContrast">
+      </label>
+      <label class="ajustes-toggle-row">
+        <span>Modo oscuro</span>
+        <input type="checkbox" id="a11yDarkMode">
+      </label>
+      <label class="ajustes-toggle-row">
+        <span>Reducir animaciones</span>
+        <input type="checkbox" id="a11yReduceMotion">
+      </label>
+    </div>
+
+    <div class="ajustes-group">
+      <div class="ajustes-group-title">Restablecer</div>
+      <button class="ajustes-reset-btn" id="a11yReset">Volver a los valores de accesibilidad originales</button>
+    </div>
+
+    <div class="ajustes-group">
+      <div class="ajustes-group-title">🗑️ Restablecer todo el viaje</div>
+      <p class="ajustes-reset-desc">Borra los tildados de visitas, todos los checklists y vuelve la fecha al día de hoy. No se puede deshacer.</p>
+      <button class="ajustes-reset-all-btn" id="resetAllBtn">Restablecer todo</button>
+      <div class="ajustes-confirm" id="resetConfirm" style="display:none;">
+        <p>¿Estás seguro? Se van a borrar todos los tildados y configuraciones del viaje.</p>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="ajustes-confirm-cancel" id="resetCancel">Cancelar</button>
+          <button class="ajustes-confirm-ok" id="resetConfirmOk">Sí, borrar todo</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Bind controls after HTML is set
+  requestAnimationFrame(()=>{
+    syncA11yControls();
+    const sec = document.getElementById('sec-ajustes');
+    if(!sec) return;
+
+    sec.querySelector('#fontDecrease').addEventListener('click', ()=>{ if(a11yState.fontSize>70){ a11yState.fontSize-=10; applyA11y(); saveA11y(); }});
+    sec.querySelector('#fontIncrease').addEventListener('click', ()=>{ if(a11yState.fontSize<160){ a11yState.fontSize+=10; applyA11y(); saveA11y(); }});
+    sec.querySelector('#lineDecrease').addEventListener('click', ()=>{ if(a11yState.lineIdx>0){ a11yState.lineIdx--; applyA11y(); saveA11y(); }});
+    sec.querySelector('#lineIncrease').addEventListener('click', ()=>{ if(a11yState.lineIdx<LINE_VALUES.length-1){ a11yState.lineIdx++; applyA11y(); saveA11y(); }});
+    sec.querySelector('#a11yHighContrast').addEventListener('change', e=>{ a11yState.highContrast=e.target.checked; applyA11y(); saveA11y(); });
+    sec.querySelector('#a11yDarkMode').addEventListener('change', e=>{ a11yState.darkMode=e.target.checked; applyA11y(); saveA11y(); });
+    sec.querySelector('#a11yReduceMotion').addEventListener('change', e=>{ a11yState.reduceMotion=e.target.checked; applyA11y(); saveA11y(); });
+    sec.querySelector('#a11yReset').addEventListener('click', ()=>{ a11yState={...A11Y_DEFAULTS}; applyA11y(); saveA11y(); });
+
+    // Reset everything
+    const resetAllBtn = sec.querySelector('#resetAllBtn');
+    const resetConfirm = sec.querySelector('#resetConfirm');
+    const resetCancel = sec.querySelector('#resetCancel');
+    const resetConfirmOk = sec.querySelector('#resetConfirmOk');
+
+    resetAllBtn.addEventListener('click', ()=>{
+      resetConfirm.style.display = 'block';
+      resetAllBtn.style.display = 'none';
+    });
+    resetCancel.addEventListener('click', ()=>{
+      resetConfirm.style.display = 'none';
+      resetAllBtn.style.display = 'block';
+    });
+    resetConfirmOk.addEventListener('click', async ()=>{
+      // Clear all localStorage keys for this app
+      const keys = ['checklist-state','stop-checklists-state','visited-stops','trip-config','a11y'];
+      for(const k of keys){ await appStorage.set(k, null); localStorage.removeItem('gchu-app:'+k); }
+
+      // Reset trip config to today
+      tripConfig = { totalDays:6, arrivalDate:todayISO(), arrivalTime:'15:00' };
+      DAYS = buildScheduleDays(tripConfig.totalDays, tripConfig.arrivalDate, tripConfig.arrivalTime);
+
+      // Reset a11y
+      a11yState = { ...A11Y_DEFAULTS };
+      applyA11y();
+
+      // Rebuild everything
+      updateHeroEyebrow();
+      renderAll();
+
+      // Reset clima cache so it reloads with new dates
+      const climaSec = document.getElementById('sec-clima');
+      if(climaSec) climaSec._climaLoaded = false;
+    });
+  });
+
+  return wrap;
+}
+
+function buildMapaSection(){
+  const wrap = document.createElement('div');
+  wrap.className = 'section'; wrap.id = 'sec-mapa'; wrap.setAttribute('role','region'); wrap.setAttribute('aria-label','Mapa'); wrap.setAttribute('tabindex','-1');
+
+  const filter = document.createElement('div');
+  filter.className = 'map-day-filter';
+
+  const allChip = document.createElement('button');
+  allChip.className = 'map-chip active';
+  allChip.dataset.day = 'all';
+  allChip.textContent = 'Todos';
+  filter.appendChild(allChip);
+
+  DAYS.forEach(d=>{
+    const chip = document.createElement('button');
+    chip.className = 'map-chip';
+    chip.dataset.day = d.id;
+    chip.textContent = d.weekdayShort ? `${d.weekdayShort} ${d.dateLabel}` : `Día ${d.num}`;
+    filter.appendChild(chip);
+  });
+
+  // Listeners attached here so they survive every renderAll() rebuild
+  filter.addEventListener('click', (e)=>{
+    const chip = e.target.closest('.map-chip');
+    if(!chip) return;
+    filter.querySelectorAll('.map-chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    if(leafletMap) renderMapMarkers(chip.dataset.day);
+  });
+
+  wrap.appendChild(filter);
+
+  const mapDiv = document.createElement('div');
+  mapDiv.id = 'leafletMap';
+  mapDiv.setAttribute('role', 'application');
+  mapDiv.setAttribute('aria-label', 'Mapa interactivo con las paradas del itinerario');
+  wrap.appendChild(mapDiv);
+
+  return wrap;
+}
+
+function renderAll(){
+  // Desactivar el mapa antes de limpiar el DOM para que no quede en estado inconsistente
+  const mapaSection = document.getElementById('sec-mapa');
+  if(mapaSection) mapaSection.classList.remove('active');
+
+  // Reset map instance so it gets rebuilt fresh against the new DAYS
+  if(leafletMap){ try{ leafletMap.remove(); }catch(e){} leafletMap = null; mapLayers = []; }
+
+  sectionsRoot.innerHTML = '';
+  sectionsRoot.appendChild(buildItinerarioSection());
+  sectionsRoot.appendChild(buildMapaSection());
+  sectionsRoot.appendChild(buildClimaSection());
+  sectionsRoot.appendChild(buildExtrasSection());
+  sectionsRoot.appendChild(buildTipsSection());
+  sectionsRoot.appendChild(buildChecklistSection());
+  sectionsRoot.appendChild(buildAjustesSection());
+
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-itinerario').classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>{ b.classList.remove('active'); b.removeAttribute('aria-current'); });
+  const itinBtn = document.querySelector('.nav-btn[data-target="itinerario"]');
+  if(itinBtn){ itinBtn.classList.add('active'); itinBtn.setAttribute('aria-current', 'page'); }
+
+  initStopChecklists();
+  initVisitedToggles();
+  renderChecklist();
+}
+
+/* expand/collapse curiosity+tip */
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.pill-toggle');
+  if(!btn) return;
+  const target = document.getElementById(btn.dataset.target);
+  target.classList.toggle('open');
+  btn.classList.toggle('open');
+  const isOpen = target.classList.contains('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  const label = btn.querySelector('.toggle-label');
+  label.textContent = isOpen ? ' Ocultar' : ' Ver más: historia, curiosidad y tips';
+});
+
+/* ===================== MAPA (Leaflet) ===================== */
+const DAY_COLORS = {dia1:"#123C52", dia2:"#1F5C79", dia3:"#B23A6B", dia4:"#2E8B8B", dia5:"#5B7C3F", dia6:"#8C6A1F", diaExtra:"#5B4B8A"};
+let leafletMap = null;
+let mapLayers = [];
+
+renderAll();
+
+function initMap(){
+  if(leafletMap) return;
+  leafletMap = L.map('leafletMap', {scrollWheelZoom:true}).setView([-33.05, -58.55], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'&copy; OpenStreetMap',
+    maxZoom: 18
+  }).addTo(leafletMap);
+  renderMapMarkers('all');
+
+  // Reliable resize handling: recalculates whenever the container's
+  // actual size changes, instead of guessing with a fixed delay.
+  const mapEl = document.getElementById('leafletMap');
+  if('ResizeObserver' in window){
+    const ro = new ResizeObserver(()=>{ leafletMap.invalidateSize(); });
+    ro.observe(mapEl);
+  }
+  window.addEventListener('orientationchange', ()=>{
+    setTimeout(()=>leafletMap.invalidateSize(), 250);
+  });
+}
+
+function renderMapMarkers(filterDay){
+  mapLayers.forEach(l => leafletMap.removeLayer(l));
+  mapLayers = [];
+
+  const daysToShow = filterDay === 'all' ? DAYS : DAYS.filter(d=>d.id===filterDay);
+  const allPoints = [];
+
+  daysToShow.forEach(day=>{
+    const color = DAY_COLORS[day.id] || "#123C52";
+    const routeCoords = [];
+
+    day.stops.forEach((s, i)=>{
+      if(s.lat == null) return;
+      routeCoords.push([s.lat, s.lng]);
+      allPoints.push([s.lat, s.lng]);
+
+      const icon = L.divIcon({
+        className:'',
+        html:`<div class="day-marker-icon" style="background:${color}">${day.num}</div>`,
+        iconSize:[28,28], iconAnchor:[14,14]
+      });
+      const marker = L.marker([s.lat, s.lng], {icon}).addTo(leafletMap);
+      marker.bindPopup(`
+        <div class="popup-time">${s.time} · Día ${day.num}</div>
+        <div class="popup-name">${s.name}</div>
+        <p class="popup-desc">${s.desc.slice(0,110)}${s.desc.length>110?'…':''}</p>
+      `);
+      mapLayers.push(marker);
+    });
+
+    if(routeCoords.length > 1 && filterDay !== 'all'){
+      const line = L.polyline(routeCoords, {color, weight:3, dashArray:'6,6', opacity:0.8}).addTo(leafletMap);
+      mapLayers.push(line);
+    }
+  });
+
+  if(allPoints.length){
+    leafletMap.fitBounds(allPoints, {padding:[30,30]});
+  }
+}
+
+/* ===================== BOTTOM NAV ===================== */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>{ b.classList.remove('active'); b.removeAttribute('aria-current'); });
+    btn.classList.add('active');
+    btn.setAttribute('aria-current', 'page');
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    const activeSection = document.getElementById('sec-'+btn.dataset.target);
+    activeSection.classList.add('active');
+    if(btn.dataset.target !== 'mapa'){ activeSection.focus({ preventScroll: true }); }
+    if(btn.dataset.target === 'mapa'){
+      initMap();
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        if(leafletMap) leafletMap.invalidateSize();
+      }));
+      setTimeout(()=>leafletMap && leafletMap.invalidateSize(), 300);
+    }
+    if(btn.dataset.target === 'clima'){ loadClima(); }
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+});
+
+/* ===================== CHECKLIST (persisted via window.storage) ===================== */
+async function renderChecklist(){
+  const root = document.getElementById('checklistItems');
+  root.innerHTML = '';
+  let saved = {};
+  try{
+    const res = await appStorage.get('checklist-state');
+    if(res && res.value) saved = JSON.parse(res.value);
+  }catch(e){ /* no saved state yet */ }
+
+  CHECKLIST_ITEMS.forEach((label, i)=>{
+    const key = 'item-'+i;
+    const checked = !!saved[key];
+    const row = document.createElement('label');
+    row.className = 'check-item' + (checked ? ' done' : '');
+    row.innerHTML = `<input type="checkbox" ${checked?'checked':''}><span>${label}</span>`;
+    row.querySelector('input').addEventListener('change', async (e)=>{
+      row.classList.toggle('done', e.target.checked);
+      saved[key] = e.target.checked;
+      try{ await appStorage.set('checklist-state', JSON.stringify(saved)); }catch(err){}
+    });
+    root.appendChild(row);
+  });
+}
+renderChecklist();
+
+/* ===================== PER-STOP CHECKLISTS (persisted via window.storage) ===================== */
+async function initStopChecklists(){
+  let savedAll = {};
+  try{
+    const res = await appStorage.get('stop-checklists-state');
+    if(res && res.value) savedAll = JSON.parse(res.value);
+  }catch(e){ /* no saved state yet */ }
+
+  document.querySelectorAll('.stop-checklist').forEach(container=>{
+    const stopId = container.dataset.stop;
+    const saved = savedAll[stopId] || {};
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+
+    const updateProgress = ()=>{
+      const total = checkboxes.length;
+      const doneCount = [...checkboxes].filter(c=>c.checked).length;
+      const badge = document.querySelector(`.stop-progress-badge[data-progress-for="${stopId}"]`);
+      if(badge) badge.textContent = `✅ ${doneCount}/${total}`;
+    };
+
+    checkboxes.forEach(cb=>{
+      const idx = cb.dataset.idx;
+      cb.checked = !!saved[idx];
+      cb.addEventListener('change', async ()=>{
+        saved[idx] = cb.checked;
+        savedAll[stopId] = saved;
+        updateProgress();
+        try{ await appStorage.set('stop-checklists-state', JSON.stringify(savedAll)); }catch(err){}
+      });
+    });
+    updateProgress();
+  });
+}
+initStopChecklists();
+
+/* ===================== VISITED TOGGLE (persisted via window.storage) ===================== */
+async function initVisitedToggles(){
+  let saved = {};
+  try{
+    const res = await appStorage.get('visited-stops');
+    if(res && res.value) saved = JSON.parse(res.value);
+  }catch(e){ /* no saved state yet */ }
+
+  document.querySelectorAll('.visited-check').forEach(cb=>{
+    const stopId = cb.dataset.stop;
+    const card = cb.closest('.stop');
+    const isVisited = !!saved[stopId];
+    cb.checked = isVisited;
+    card.classList.toggle('is-visited', isVisited);
+
+    cb.addEventListener('change', async ()=>{
+      saved[stopId] = cb.checked;
+      card.classList.toggle('is-visited', cb.checked);
+      try{ await appStorage.set('visited-stops', JSON.stringify(saved)); }catch(err){}
+    });
+  });
+}
+initVisitedToggles();
+
+/* ===================== SETTINGS MODAL (dynamic trip config) ===================== */
+function updateHeroEyebrow(){
+  const eyebrow = document.getElementById('heroEyebrow');
+  if(!eyebrow) return;
+  if(DAYS.length){
+    const first = `${DAYS[0].weekdayShort} ${DAYS[0].dateLabel}`;
+    const last = `${DAYS[DAYS.length-1].weekdayShort} ${DAYS[DAYS.length-1].dateLabel}`;
+    eyebrow.textContent = `Guía interactiva · ${tripConfig.totalDays} días (${first} – ${last})`;
+  }
+}
+
+let pendingArrivalDate = tripConfig.arrivalDate;
+let pendingArrivalTime = tripConfig.arrivalTime;
+let pendingTotalDays = tripConfig.totalDays;
+
+function updateDeparturePreview(){
+  const arrival = parseDateInput(pendingArrivalDate);
+  const departure = addDays(arrival, pendingTotalDays - 1);
+  const preview = document.getElementById('departurePreview');
+  preview.textContent = `Salida estimada: ${formatWeekday(departure)} ${formatDateShort(departure)} por la mañana.`;
+}
+
+function renderDayStepper(){
+  document.getElementById('dayCount').textContent = pendingTotalDays;
+  document.getElementById('dayMinus').disabled = pendingTotalDays <= MIN_DAYS;
+  document.getElementById('dayPlus').disabled = pendingTotalDays >= MAX_DAYS;
+  updateDeparturePreview();
+}
+
+document.getElementById('dayMinus').addEventListener('click', ()=>{
+  pendingTotalDays = Math.max(MIN_DAYS, pendingTotalDays - 1);
+  renderDayStepper();
+});
+document.getElementById('dayPlus').addEventListener('click', ()=>{
+  pendingTotalDays = Math.min(MAX_DAYS, pendingTotalDays + 1);
+  renderDayStepper();
+});
+
+const arrivalDateInput = document.getElementById('arrivalDateInput');
+const arrivalTimeInput = document.getElementById('arrivalTimeInput');
+arrivalDateInput.addEventListener('change', ()=>{
+  pendingArrivalDate = arrivalDateInput.value || pendingArrivalDate;
+  updateDeparturePreview();
+});
+arrivalTimeInput.addEventListener('change', ()=>{
+  pendingArrivalTime = arrivalTimeInput.value || pendingArrivalTime;
+});
+
+const settingsBackdrop = document.getElementById('settingsBackdrop');
+const settingsBtnEl = document.getElementById('settingsBtn');
+
+function closeSettingsModal(){
+  settingsBackdrop.classList.remove('open');
+  settingsBtnEl.focus();
+}
+
+settingsBtnEl.addEventListener('click', ()=>{
+  pendingArrivalDate = tripConfig.arrivalDate;
+  pendingArrivalTime = tripConfig.arrivalTime;
+  pendingTotalDays = tripConfig.totalDays;
+  arrivalDateInput.value = pendingArrivalDate;
+  arrivalTimeInput.value = pendingArrivalTime;
+  renderDayStepper();
+  settingsBackdrop.classList.add('open');
+  arrivalDateInput.focus();
+});
+document.getElementById('settingsCancel').addEventListener('click', closeSettingsModal);
+settingsBackdrop.addEventListener('click', (e)=>{
+  if(e.target === settingsBackdrop) closeSettingsModal();
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && settingsBackdrop.classList.contains('open')) closeSettingsModal();
+});
+
+document.getElementById('settingsApply').addEventListener('click', async ()=>{
+  tripConfig = {
+    totalDays: pendingTotalDays,
+    arrivalDate: pendingArrivalDate,
+    arrivalTime: pendingArrivalTime
+  };
+  DAYS = buildScheduleDays(tripConfig.totalDays, tripConfig.arrivalDate, tripConfig.arrivalTime);
+  updateHeroEyebrow();
+  renderAll();
+  settingsBackdrop.classList.remove('open');
+  try{ await appStorage.set('trip-config', JSON.stringify(tripConfig)); }catch(err){}
+});
+
+(async function loadTripConfig(){
+  let hasSavedConfig = false;
+  try{
+    const res = await appStorage.get('trip-config');
+    if(res && res.value){
+      const saved = JSON.parse(res.value);
+      if(saved && typeof saved.totalDays === 'number' && saved.arrivalDate){
+        tripConfig = saved;
+        DAYS = buildScheduleDays(tripConfig.totalDays, tripConfig.arrivalDate, tripConfig.arrivalTime);
+        renderAll();
+        hasSavedConfig = true;
+      }
+    }
+  }catch(e){ /* no saved config yet, keep default */ }
+  updateHeroEyebrow();
+
+  if(!hasSavedConfig){
+    pendingArrivalDate = tripConfig.arrivalDate;
+    pendingArrivalTime = tripConfig.arrivalTime;
+    pendingTotalDays = tripConfig.totalDays;
+    arrivalDateInput.value = pendingArrivalDate;
+    arrivalTimeInput.value = pendingArrivalTime;
+    renderDayStepper();
+    settingsBackdrop.classList.add('open');
+  }
+})();
+
+/* ===================== PWA: service worker (real file, see sw.js) ===================== */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click', async ()=>{
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('installBanner').classList.remove('show');
+});
+</script>
+</body>
+</html>

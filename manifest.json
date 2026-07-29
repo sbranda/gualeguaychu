@@ -1,0 +1,25 @@
+{
+  "name": "Viaje Gualeguaychú",
+  "short_name": "Viaje Gualeguaychú",
+  "description": "Guía interactiva de viaje: itinerario, mapa, curiosidades y tips para Gualeguaychú.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F5F1E6",
+  "theme_color": "#123C52",
+  "lang": "es-AR",
+  "icons": [
+    {
+      "src": "icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
