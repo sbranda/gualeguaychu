@@ -8,8 +8,8 @@ Guía de viaje instalable: itinerario día por día (lunes por la tarde a sábad
 index.html      → la app completa
 manifest.json   → metadata de la PWA (nombre, ícono, colores)
 sw.js           → service worker para funcionamiento offline
-icon-192.svg    → ícono chico
-icon-512.svg    → ícono grande
+icon-192.png    → ícono chico
+icon-512.png    → ícono grande
 ```
 
 ## Itinerario incluido

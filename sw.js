@@ -1,10 +1,10 @@
-const CACHE_NAME = "gualeguaychu-5dias-v1";
+const CACHE_NAME = "gualeguaychu-5dias-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./icon-192.svg",
-  "./icon-512.svg"
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
